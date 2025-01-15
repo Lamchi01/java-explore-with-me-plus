@@ -20,6 +20,7 @@ import java.util.List;
 @Validated
 public class StatController {
     private final StatService statService;
+
     @PostMapping("/hit")
     @ResponseStatus(HttpStatus.CREATED)
     public void hit(@RequestBody ParamHitDto paramHitDto) {
