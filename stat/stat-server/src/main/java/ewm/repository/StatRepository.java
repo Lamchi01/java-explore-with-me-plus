@@ -1,4 +1,4 @@
-package ewm.dao;
+package ewm.repository;
 
 import ewm.ViewStats;
 import ewm.model.EndpointHit;

@@ -3,7 +3,7 @@ package ewm.service;
 import ewm.ParamDto;
 import ewm.ParamHitDto;
 import ewm.ViewStats;
-import ewm.dao.StatRepository;
+import ewm.repository.StatRepository;
 import ewm.mapper.StatMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
