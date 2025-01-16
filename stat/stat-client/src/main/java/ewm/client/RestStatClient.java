@@ -1,40 +1,83 @@
 package ewm.client;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
-
 import ewm.ParamDto;
 import ewm.ParamHitDto;
 import ewm.StatDto;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Component
 public class RestStatClient implements StatClient {
-    final RestTemplate template;
-    final String statUrl;
+    //    final RestTemplate template;
+    private final String statUrl;
+    private final RestClient restClient;
 
-    public RestStatClient(RestTemplate template, @Value("${client.url}") String statUrl) {
-        this.template = template;
+//    public RestStatClient(RestTemplate template, @Value("${client.url}") String statUrl) {
+//        this.template = template;
+//        this.statUrl = statUrl;
+//    }
+
+    public RestStatClient(@Value("${client.url}") String statUrl) {
         this.statUrl = statUrl;
+        this.restClient = RestClient.builder()
+                .baseUrl(statUrl)
+                .build();
     }
+
+//    public RestStatClient(@Value("http://localhost:9090") String statUrl) {
+//        this.statUrl = statUrl;
+//        this.restClient = RestClient.builder()
+//                .baseUrl(statUrl)
+//                .build();
+//    }
 
 
     @Override
     public void hit(ParamHitDto paramHitDto) {
-//        template
+        restClient.post()
+                .uri("/hit")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(paramHitDto)
+                .retrieve()
+                .onStatus(HttpStatusCode::is5xxServerError, (request, response) -> {
+                    throw new RuntimeException("Ошибка сервера.");
+                })
+                .onStatus(status -> status != HttpStatus.CREATED, (request, response) -> {
+                    throw new RuntimeException("Ошибка при создании.");
+                });
     }
 
     //
     @Override
     public StatDto getStat(ParamDto paramDto) {
-//        template
-        return new StatDto();
+        return restClient.get().uri(uriBuilder -> uriBuilder.path("/stats")
+                        .queryParam("start", URLEncoder.encode(localDateTimeFormatter(LocalDateTime.now()), StandardCharsets.UTF_8))
+                        .queryParam("end", URLEncoder.encode(localDateTimeFormatter(LocalDateTime.now()), StandardCharsets.UTF_8))
+                        .queryParam("uris", paramDto)
+                        .queryParam("unique", paramDto)
+                        .build())
+                .retrieve()
+                .onStatus(HttpStatusCode::is5xxServerError, (request, response) -> {
+                    throw new RuntimeException("Ошибка сервера.");
+                })
+                .body(StatDto.class);
     }
 
-    public static void main(String[] args) {
+    private String localDateTimeFormatter(LocalDateTime dateTime) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return dateTime.format(formatter);
+    }
+
+    /*public static void main(String[] args) {
 
 //		String uri = "kjkj kjkf 8#$#$#$^ 65^%#@#$%";
 //		statClient.hit(Collections.singltonList(uri));
@@ -82,5 +125,5 @@ public class RestStatClient implements StatClient {
         //3. Увеличиваем hit
         // /events/1 ,  /events/44, /events/100  - не верно!!!
         // только для /events - слой контроллера
-    }
+    }*/
 }
