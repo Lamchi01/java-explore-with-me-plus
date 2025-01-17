@@ -50,24 +50,4 @@ public class RestStatClient implements StatClient {
                 })
                 .body(ParameterizedTypeReference.forType(List.class));
     }
-
-//    @Override
-//    public ViewStats getStat(ParamDto paramDto) {
-//        return restClient.get().uri(uriBuilder -> uriBuilder.path("/stats")
-//                        .queryParam("start", URLEncoder.encode(localDateTimeFormatter(paramDto.getStart()), StandardCharsets.UTF_8))
-//                        .queryParam("end", URLEncoder.encode(localDateTimeFormatter(paramDto.getEnd()), StandardCharsets.UTF_8))
-//                        .queryParam("uris", paramDto.getUris())
-//                        .queryParam("unique", paramDto.getUnique())
-//                        .build())
-//                .retrieve()
-//                .onStatus(HttpStatusCode::is5xxServerError, (request, response) -> {
-//                    throw new RuntimeException("Ошибка сервера.");
-//                })
-//                .body(ViewStats.class);
-//    }
-//
-//    private String localDateTimeFormatter(LocalDateTime dateTime) {
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-//        return dateTime.format(formatter);
-//    }
 }

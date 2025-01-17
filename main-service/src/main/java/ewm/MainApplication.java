@@ -35,6 +35,5 @@ public class MainApplication {
                 List.of(hitDto.getUri(), hitDto2.getUri()),
                 false);
         List<ViewStats> result = statClient.getStat(paramDto);
-        System.out.println(result);
     }
 }
