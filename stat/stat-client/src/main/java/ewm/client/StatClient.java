@@ -2,11 +2,12 @@ package ewm.client;
 
 import ewm.ParamDto;
 import ewm.ParamHitDto;
-import ewm.StatDto;
+import ewm.ViewStats;
+
+import java.util.List;
 
 public interface StatClient {
     void hit(ParamHitDto paramHitDto);
 
-    //
-    StatDto getStat(ParamDto paramDto);
+    List<ViewStats> getStat(ParamDto paramDto);
 }
