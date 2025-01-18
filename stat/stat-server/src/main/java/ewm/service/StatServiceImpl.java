@@ -3,12 +3,14 @@ package ewm.service;
 import ewm.ParamDto;
 import ewm.ParamHitDto;
 import ewm.ViewStats;
-import ewm.repository.StatRepository;
+import ewm.exception.ValidateException;
 import ewm.mapper.StatMapper;
+import ewm.repository.StatRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Transactional(readOnly = true)
@@ -25,6 +27,11 @@ public class StatServiceImpl implements StatService {
 
     @Override
     public List<ViewStats> getStat(ParamDto paramDto) {
+        if (paramDto.getStart().isBefore(LocalDateTime.now()) &&
+                paramDto.getEnd().isAfter(LocalDateTime.now()) &&
+                paramDto.getEnd().isAfter(paramDto.getStart())) {
+            throw new ValidateException("Некорректный диапазон времени");
+        }
         List<ViewStats> viewStatsList;
         if (paramDto.getUnique()) {
             viewStatsList = statRepository.findAllUniqueIpAndTimestampBetweenAndUriIn(

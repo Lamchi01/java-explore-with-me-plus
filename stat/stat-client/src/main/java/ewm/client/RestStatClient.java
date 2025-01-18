@@ -3,6 +3,7 @@ package ewm.client;
 import ewm.ParamDto;
 import ewm.ParamHitDto;
 import ewm.ViewStats;
+import ewm.exception.InvalidRequestException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
@@ -32,7 +33,7 @@ public class RestStatClient implements StatClient {
                 .body(paramHitDto)
                 .retrieve()
                 .onStatus(status -> status != HttpStatus.CREATED, (request, response) -> {
-                    throw new RuntimeException("Ошибка при создании.");
+                    throw new InvalidRequestException(response.getStatusCode().value() + ": " + response.getBody());
                 });
     }
 
@@ -46,7 +47,7 @@ public class RestStatClient implements StatClient {
                         .build())
                 .retrieve()
                 .onStatus(status -> status != HttpStatus.OK, (request, response) -> {
-                    throw new RuntimeException("Ошибка при создании.");
+                    throw new InvalidRequestException(response.getStatusCode().value() + ": " + response.getBody());
                 })
                 .body(ParameterizedTypeReference.forType(List.class));
     }

@@ -20,6 +20,7 @@ import java.util.List;
 @Validated
 public class StatController {
     private final StatService statService;
+    private static final String FORMAT_DATETIME = "yyyy-MM-dd HH:mm:ss";
 
     @PostMapping("/hit")
     @ResponseStatus(HttpStatus.CREATED)
@@ -30,10 +31,10 @@ public class StatController {
     }
 
     @GetMapping("/stats")
-    public List<ViewStats> getStat(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
-                                   @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
+    public List<ViewStats> getStat(@RequestParam @DateTimeFormat(pattern = FORMAT_DATETIME) LocalDateTime start,
+                                   @RequestParam @DateTimeFormat(pattern = FORMAT_DATETIME) LocalDateTime end,
                                    @RequestParam(required = false) List<String> uris,
-                                   @RequestParam(required = false, defaultValue = "false") Boolean unique) {
+                                   @RequestParam(defaultValue = "false") Boolean unique) {
         log.info("Поступил запрос GET /stats на получение статистики {}", new ParamDto(start, end, uris, unique));
         List<ViewStats> viewStats = statService.getStat(new ParamDto(start, end, uris, unique));
         log.info("Запрос GET /stats успешно обработан {}", viewStats);
