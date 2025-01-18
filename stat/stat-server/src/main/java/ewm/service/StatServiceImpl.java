@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Transactional(readOnly = true)
@@ -27,9 +26,7 @@ public class StatServiceImpl implements StatService {
 
     @Override
     public List<ViewStats> getStat(ParamDto paramDto) {
-        if (paramDto.getStart().isBefore(LocalDateTime.now()) &&
-                paramDto.getEnd().isAfter(LocalDateTime.now()) &&
-                paramDto.getEnd().isAfter(paramDto.getStart())) {
+        if (!paramDto.getStart().isBefore(paramDto.getEnd())) {
             throw new ValidateException("Некорректный диапазон времени");
         }
         List<ViewStats> viewStatsList;
