@@ -14,13 +14,14 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static ewm.utility.Constants.FORMAT_DATETIME;
+
 @RestController
 @RequiredArgsConstructor
 @Slf4j
 @Validated
 public class StatController {
     private final StatService statService;
-    private static final String FORMAT_DATETIME = "yyyy-MM-dd HH:mm:ss";
 
     @PostMapping("/hit")
     @ResponseStatus(HttpStatus.CREATED)

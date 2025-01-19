@@ -33,7 +33,9 @@ public class RestStatClient implements StatClient {
                 .body(paramHitDto)
                 .retrieve()
                 .onStatus(status -> status != HttpStatus.CREATED, (request, response) -> {
-                    throw new InvalidRequestException(response.getStatusCode().value() + ": " + response.getBody());
+//                    throw new InvalidRequestException(RestStatClient.class, response.getStatusCode().value() + ": " + response.getBody());
+                    throw new InvalidRequestException(RestStatClient.class, response.getStatusCode().value(), response.getBody().toString());
+
                 });
     }
 
@@ -47,7 +49,7 @@ public class RestStatClient implements StatClient {
                         .build())
                 .retrieve()
                 .onStatus(status -> status != HttpStatus.OK, (request, response) -> {
-                    throw new InvalidRequestException(response.getStatusCode().value() + ": " + response.getBody());
+                    throw new InvalidRequestException(RestStatClient.class, response.getStatusCode().value() + ": " + response.getBody());
                 })
                 .body(ParameterizedTypeReference.forType(List.class));
     }
