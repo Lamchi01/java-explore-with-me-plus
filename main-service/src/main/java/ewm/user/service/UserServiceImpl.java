@@ -30,7 +30,6 @@ public class UserServiceImpl implements UserService {
     }
 
     public UserDto create(UserDto userDto) {
-
         return userMapper.toUserDto(userRepository.save(userMapper.toUser(userDto)));
     }
 
