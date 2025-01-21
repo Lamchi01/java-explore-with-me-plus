@@ -62,5 +62,6 @@ public class ErrorHandlerControllerAdvice {
         return new ApiError("INTERNAL_SERVER_ERROR", "internal server error", stackTrace, LocalDateTime.now().toString());
     }
 
-
+    public record ApiError(String status, String reason, String message, String timestamp) {
+    }
 }
