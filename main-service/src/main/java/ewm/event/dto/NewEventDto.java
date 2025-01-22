@@ -1,5 +1,6 @@
 package ewm.event.dto;
 
+import ewm.event.model.Location;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
