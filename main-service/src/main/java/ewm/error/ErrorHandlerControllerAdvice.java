@@ -1,7 +1,5 @@
 package ewm.error;
 
-import ewm.exception.EntityNotFoundException;
-import ewm.exception.EntityUpdateException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -60,6 +58,20 @@ public class ErrorHandlerControllerAdvice {
         String stackTrace = sw.toString();
 
         return new ApiError("INTERNAL_SERVER_ERROR", "internal server error", stackTrace, LocalDateTime.now().toString());
+    }
+
+    @ExceptionHandler({NotPublishEventException.class,
+            InitiatorRequestException.class,
+            ParticipantLimitException.class,
+            RepeatUserRequestorException.class})
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError onNotPublishEventException(final RuntimeException e) {
+        log.error("NotPublishEventException - 409: {}", e.getMessage(), e);
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        String stackTrace = sw.toString();
+        return new ApiError("CONFLICT", "event is not published", stackTrace, LocalDateTime.now().toString());
     }
 
     public record ApiError(String status, String reason, String message, String timestamp) {

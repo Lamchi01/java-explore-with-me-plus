@@ -1,5 +1,6 @@
-package ewm.event.dto;
+package ewm.requests.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -8,6 +9,7 @@ import lombok.Data;
 public class ParticipationRequestDto {
     private String created;
     private Long event;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
     private Long requester;
     private String status;
