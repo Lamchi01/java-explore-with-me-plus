@@ -3,7 +3,7 @@ package ewm.event.service;
 import ewm.ParamDto;
 import ewm.ViewStats;
 import ewm.client.RestStatClient;
-import ewm.error.EntityNotFoundException;
+import ewm.exception.EntityNotFoundException;
 import ewm.event.dto.EventFullDto;
 import ewm.event.dto.EventShortDto;
 import ewm.event.dto.ReqParam;

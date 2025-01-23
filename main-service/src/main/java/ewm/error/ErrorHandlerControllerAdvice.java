@@ -1,5 +1,6 @@
 package ewm.error;
 
+import ewm.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -66,7 +67,7 @@ public class ErrorHandlerControllerAdvice {
             RepeatUserRequestorException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError onNotPublishEventException(final RuntimeException e) {
-        log.error("NotPublishEventException - 409: {}", e.getMessage(), e);
+        log.error("409: {}", e.getMessage(), e);
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);

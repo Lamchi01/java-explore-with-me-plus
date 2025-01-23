@@ -5,7 +5,7 @@ import ewm.category.dto.NewCategoryDto;
 import ewm.category.mapper.CategoryMapper;
 import ewm.category.model.Category;
 import ewm.category.repository.CategoryRepository;
-import ewm.error.EntityNotFoundException;
+import ewm.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

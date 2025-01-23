@@ -1,4 +1,4 @@
-package ewm.error;
+package ewm.exception;
 
 public class NotPublishEventException extends RuntimeException {
     public NotPublishEventException(String message) {
