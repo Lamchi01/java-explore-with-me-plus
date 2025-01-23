@@ -1,4 +1,4 @@
-package ewm.error;
+package ewm.exception;
 
 public class ParticipantLimitException extends RuntimeException {
     public ParticipantLimitException(String message) {

@@ -1,9 +1,9 @@
 package ewm.requests.service;
 
-import ewm.error.*;
 import ewm.event.model.Event;
 import ewm.event.model.EventState;
 import ewm.event.repository.EventRepository;
+import ewm.exception.*;
 import ewm.requests.dto.ParticipationRequestDto;
 import ewm.requests.mapper.RequestMapper;
 import ewm.requests.model.Request;
