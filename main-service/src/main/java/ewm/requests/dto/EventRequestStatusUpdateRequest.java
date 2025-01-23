@@ -1,4 +1,4 @@
-package ewm.event.dto;
+package ewm.requests.dto;
 
 import lombok.Getter;
 

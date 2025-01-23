@@ -1,6 +1,6 @@
 package ewm.user.service;
 
-import ewm.exception.EntityNotFoundException;
+import ewm.error.EntityNotFoundException;
 import ewm.user.dto.UserDto;
 import ewm.user.mapper.UserMapper;
 import ewm.user.model.User;

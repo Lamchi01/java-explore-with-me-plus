@@ -5,6 +5,7 @@ import ewm.ViewStats;
 import ewm.category.model.Category;
 import ewm.category.repository.CategoryRepository;
 import ewm.client.RestStatClient;
+import ewm.error.EntityNotFoundException;
 import ewm.event.dto.EventFullDto;
 import ewm.event.dto.EventShortDto;
 import ewm.event.dto.NewEventDto;
