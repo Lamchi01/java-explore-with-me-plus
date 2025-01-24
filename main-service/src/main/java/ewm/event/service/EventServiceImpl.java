@@ -68,7 +68,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventFullDto create(long userId, NewEventDto newEventDto) {
+    public EventFullDto create(Long userId, NewEventDto newEventDto) {
         LocalDateTime eventDate = LocalDateTime.parse(newEventDto.getEventDate(),
                 DateTimeFormatter.ofPattern(FORMAT_DATETIME));
         if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
@@ -86,6 +86,15 @@ public class EventServiceImpl implements EventService {
         event.setState(EventState.PENDING);
         event.setLocation(locationRepository.save(event.getLocation()));
         return eventMapper.toEventFullDto(eventRepository.save(event));
+    }
+
+    @Override
+    public List<EventShortDto> findUserEvents(Long userId, Integer from, Integer size) {
+        User initiator = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(User.class, "Пользователь не найден"));
+        Pageable pageable = PageRequest.of(from, size);
+        List<Event> events = eventRepository.findAllByInitiatorId(userId, pageable);
+        return eventMapper.toEventShortDto(events);
     }
 
     private EventFullDto addViews(EventFullDto eventDto) {
