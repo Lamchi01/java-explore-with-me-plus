@@ -5,6 +5,7 @@ import ewm.ViewStats;
 import ewm.category.model.Category;
 import ewm.category.repository.CategoryRepository;
 import ewm.client.RestStatClient;
+import ewm.exception.EntityNotFoundException;
 import ewm.event.dto.EventFullDto;
 import ewm.event.dto.EventShortDto;
 import ewm.event.dto.NewEventDto;
@@ -13,11 +14,12 @@ import ewm.event.mapper.EventMapper;
 import ewm.event.model.Event;
 import ewm.event.model.EventState;
 import ewm.event.repository.EventRepository;
+
 import ewm.event.repository.LocationRepository;
-import ewm.exception.EntityNotFoundException;
 import ewm.exception.ValidationException;
 import ewm.user.model.User;
 import ewm.user.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
