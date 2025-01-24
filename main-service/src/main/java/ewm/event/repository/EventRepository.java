@@ -30,6 +30,20 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                            Boolean onlyAvailable,
                            Pageable pageable);
 
+    @Query("""
+        SELECT e FROM Event e
+        WHERE e.initiator.id IN :users
+        AND e.state IN :states
+        AND e.category.id IN :categories
+        AND e.eventDate BETWEEN :rangeStart AND :rangeEnd
+               \s""")
+    List<Event> findAdminEvents(List<Long> users,
+                                List<String> states,
+                                List<Long> categories,
+                                LocalDateTime rangeStart,
+                                LocalDateTime rangeEnd,
+                                Pageable pageable);
+
     Optional<Event> findByIdAndInitiatorId(Long eventId, Long initiatorId);
 
     List<Event> findAllByInitiatorId(Long initiatorId);

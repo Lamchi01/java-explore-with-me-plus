@@ -59,6 +59,22 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public List<EventFullDto> publicGetAllEvents(AdminEventParams params) {
+        Pageable pageable = PageRequest.of(params.getFrom(), params.getSize());
+
+        List<EventFullDto> eventFullDtos = eventMapper.toEventFullDtos(eventRepository.findAdminEvents(
+                params.getUsers(),
+                params.getStates(),
+                params.getCategories(),
+                params.getRangeStart(),
+                params.getRangeEnd(),
+                pageable));
+
+        return eventFullDtos;
+    }
+
+
+    @Override
     public EventFullDto publicGetEvent(long id) {
         return addViews(eventMapper.toEventFullDto(eventRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие c ID - " + id + ", не найдено."))));

@@ -8,6 +8,8 @@ public interface EventService {
 
     List<EventShortDto> publicGetAllEvents(ReqParam reqParam);
 
+    List<EventFullDto> publicGetAllEvents(AdminEventParams params);
+
     EventFullDto publicGetEvent(long id);
 
     EventFullDto create(Long userId, NewEventDto newEventDto);

@@ -24,6 +24,10 @@ public interface EventMapper {
     @Mapping(target = "confirmedRequests", ignore = true)
     EventFullDto toEventFullDto(Event event);
 
+    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "confirmedRequests", ignore = true)
+    List<EventFullDto> toEventFullDtos(List<Event> events);
+
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "publishedOn", ignore = true)
     @Mapping(target = "createdOn", ignore = true)
