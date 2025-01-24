@@ -2,6 +2,7 @@ package ewm.error;
 
 import ewm.exception.EntityNotFoundException;
 import ewm.exception.EntityUpdateException;
+import ewm.exception.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -60,6 +61,17 @@ public class ErrorHandlerControllerAdvice {
         String stackTrace = sw.toString();
 
         return new ApiError("INTERNAL_SERVER_ERROR", "internal server error", stackTrace, LocalDateTime.now().toString());
+    }
+
+    @ExceptionHandler({ValidationException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError ValidationException(final ValidationException e) {
+        log.error("ValidationException - 400: {}", e.getMessage(), e);
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        String stackTrace = sw.toString();
+        return new ApiError("BAD_REQUEST", "validation exception", stackTrace, LocalDateTime.now().toString());
     }
 
     public record ApiError(String status, String reason, String message, String timestamp) {

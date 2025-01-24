@@ -1,0 +1,10 @@
+package ewm.event.repository;
+
+import ewm.event.model.Event;
+import ewm.event.model.Location;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+    @Repository
+    public interface LocationRepository extends JpaRepository<Location, Long> {
+}
