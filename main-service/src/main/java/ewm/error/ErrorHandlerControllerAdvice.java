@@ -61,10 +61,9 @@ public class ErrorHandlerControllerAdvice {
         return new ApiError("INTERNAL_SERVER_ERROR", "internal server error", stackTrace, LocalDateTime.now().toString());
     }
 
- main_svc_events_private
     @ExceptionHandler({ValidationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError ValidationException(final ValidationException e) {
+    public ApiError validationException(final ValidationException e) {
         log.error("ValidationException - 400: {}", e.getMessage(), e);
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
