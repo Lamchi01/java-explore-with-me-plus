@@ -2,7 +2,6 @@ package ewm.event.controller;
 
 import ewm.event.dto.EventFullDto;
 import ewm.event.dto.NewEventDto;
-import ewm.event.model.Event;
 import ewm.event.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +19,7 @@ public class PrivateEventController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public EventFullDto create(@PathVariable(name = "userId") long userId,
-                        @Valid @RequestBody NewEventDto newEventDto) {
+                               @Valid @RequestBody NewEventDto newEventDto) {
         return service.create(userId, newEventDto);
     }
 }

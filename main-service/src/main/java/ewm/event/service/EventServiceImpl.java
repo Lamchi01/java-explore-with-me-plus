@@ -5,7 +5,6 @@ import ewm.ViewStats;
 import ewm.category.model.Category;
 import ewm.category.repository.CategoryRepository;
 import ewm.client.RestStatClient;
-import ewm.exception.EntityNotFoundException;
 import ewm.event.dto.EventFullDto;
 import ewm.event.dto.EventShortDto;
 import ewm.event.dto.NewEventDto;
@@ -65,21 +64,6 @@ public class EventServiceImpl implements EventService {
         return addViews(eventMapper.toEventFullDto(eventRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие c ID - " + id + ", не найдено."))));
     }
-
-//    @Override
-//    public EventFullDto create(long userId, NewEventDto newEventDto) {
-//        LocalDateTime eventDate = LocalDateTime.parse(newEventDto.getEventDate(),
-//                DateTimeFormatter.ofPattern(FORMAT_DATETIME));
-//        if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
-//            throw new ValidationException(NewEventDto.class, "До начала события осталось меньше двух часов");
-//        }
-//        User user = userRepository.findById(userId)
-//                .orElseThrow(() -> new EntityNotFoundException(User.class, "Пользователь не найден"));
-//        Category category = categoryRepository.findById(newEventDto.getCategory())
-//                .orElseThrow(() -> new EntityNotFoundException(Category.class, "Категория не найден"));
-//        Event event = eventMapper.toEvent(newEventDto);
-//        return null;
-//    }
 
     @Override
     public EventFullDto create(long userId, NewEventDto newEventDto) {

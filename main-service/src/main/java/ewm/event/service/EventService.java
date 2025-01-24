@@ -4,7 +4,6 @@ import ewm.event.dto.EventFullDto;
 import ewm.event.dto.EventShortDto;
 import ewm.event.dto.NewEventDto;
 import ewm.event.dto.ReqParam;
-import ewm.event.model.Event;
 
 import java.util.List;
 
