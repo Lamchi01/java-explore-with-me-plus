@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @RestControllerAdvice
 public class ErrorHandlerControllerAdvice {
 
-    @ExceptionHandler({EntityNotFoundException.class})
+    @ExceptionHandler({EntityNotFoundException.class, OperationUnnecessaryException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiError onEntityNotFoundException(final EntityNotFoundException e) {
         log.error("EntityNotFoundException - 404: {}", e.getMessage(), e);

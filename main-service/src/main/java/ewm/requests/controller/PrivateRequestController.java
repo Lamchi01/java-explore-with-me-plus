@@ -1,5 +1,7 @@
 package ewm.requests.controller;
 
+import ewm.requests.dto.EventRequestStatusUpdateRequest;
+import ewm.requests.dto.EventRequestStatusUpdateResult;
 import ewm.requests.dto.ParticipationRequestDto;
 import ewm.requests.service.RequestService;
 import lombok.RequiredArgsConstructor;
@@ -30,5 +32,16 @@ public class PrivateRequestController {
     @PatchMapping("/requests/{requestId}/cancel")
     public ParticipationRequestDto cancelRequest(@PathVariable Long userId, @PathVariable Long requestId) {
         return requestService.cancelRequest(userId, requestId);
+    }
+
+    @GetMapping("/events/{eventId}/requests")
+    public List<ParticipationRequestDto> getEventRequests(@PathVariable Long userId, @PathVariable Long eventId) {
+        return requestService.getEventRequests(userId, eventId);
+    }
+
+    @PatchMapping("/events/{eventId}/requests")
+    public EventRequestStatusUpdateResult updateStatusRequest(@PathVariable Long userId, @PathVariable Long eventId,
+                                                              @RequestBody EventRequestStatusUpdateRequest eventRequest) {
+        return requestService.updateStatusRequest(userId, eventId, eventRequest);
     }
 }

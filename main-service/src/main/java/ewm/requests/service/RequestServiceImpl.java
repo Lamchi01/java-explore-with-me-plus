@@ -4,16 +4,20 @@ import ewm.event.model.Event;
 import ewm.event.model.EventState;
 import ewm.event.repository.EventRepository;
 import ewm.exception.*;
+import ewm.requests.dto.EventRequestStatusUpdateRequest;
+import ewm.requests.dto.EventRequestStatusUpdateResult;
 import ewm.requests.dto.ParticipationRequestDto;
 import ewm.requests.mapper.RequestMapper;
 import ewm.requests.model.Request;
 import ewm.requests.model.RequestStatus;
 import ewm.requests.repository.RequestRepository;
 import ewm.user.repository.UserRepository;
+import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -38,7 +42,7 @@ public class RequestServiceImpl implements RequestService {
             throw new InitiatorRequestException("Пользователь с ID - " + userId + ", не найден.");
         }
 
-        if (!requestRepository.findByRequesterIdAndEventId(userId, eventId).isEmpty()) {
+        if (requestRepository.findByRequesterIdAndEventId(userId, eventId).isPresent()) {
             throw new RepeatUserRequestorException("Пользователь с ID - " + userId + ", не найден.");
         }
         Event event = eventRepository.findById(eventId)
@@ -79,5 +83,67 @@ public class RequestServiceImpl implements RequestService {
                 .orElseThrow(() -> new EntityNotFoundException(Request.class, "Запрос с ID - " + requestId + ", не найден."));
         cancelRequest.setStatus(RequestStatus.CANCELED);
         return requestMapper.toParticipationRequestDto(requestRepository.save(cancelRequest));
+    }
+
+    @Override
+    public List<ParticipationRequestDto> getEventRequests(Long userId, Long eventId) {
+        List<Event> userEvents = eventRepository.findAllByInitiatorId(userId);
+        Event event = userEvents.stream()
+                .filter(e -> e.getInitiator().getId().equals(userId))
+                .findFirst()
+                .orElseThrow(() -> new ValidationException("Пользователь с ID - " + userId + ", не является инициатором события с ID - " + eventId + "."));
+        return requestRepository.findByEventId(event.getId()).stream()
+                .map(requestMapper::toParticipationRequestDto)
+                .toList();
+    }
+
+    @Override
+    public EventRequestStatusUpdateResult updateStatusRequest(Long userId, Long eventId,
+                                                              EventRequestStatusUpdateRequest eventRequest) {
+        Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
+                .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие с ID - " + eventId + ", не найдено."));
+        if (event.getParticipantLimit() == 0 || !event.getRequestModeration()) {
+            throw new OperationUnnecessaryException("Запрос составлен некорректно.");
+        }
+
+        List<Long> requestIds = eventRequest.getRequestIds();
+        List<Request> requests = requestIds.stream()
+                .map(r -> requestRepository.findByIdAndEventId(r, eventId)
+                        .orElseThrow(() -> new ValidationException("Запрос с ID - " + r + ", не найден.")))
+                .toList();
+
+        List<ParticipationRequestDto> confirmedRequests = new ArrayList<>();
+        List<ParticipationRequestDto> rejectedRequests = new ArrayList<>();
+
+        Long confirmedRequestsCount = requestRepository.countRequestsByEventAndStatus(event, RequestStatus.CONFIRMED);
+
+        if (confirmedRequestsCount >= event.getParticipantLimit()) {
+            throw new ParticipantLimitException("Достигнут лимит участников для данного события.");
+        }
+
+        for (Request request : requests) {
+            if (request.getStatus().equals(RequestStatus.PENDING)) {
+                if (eventRequest.getStatus().equals(RequestStatus.CONFIRMED)) {
+                    if (confirmedRequestsCount <= event.getParticipantLimit()) {
+                        request.setStatus(RequestStatus.CONFIRMED);
+                        ParticipationRequestDto confirmedRequest = requestMapper.toParticipationRequestDto(requestRepository.save(request));
+                        confirmedRequests.add(confirmedRequest);
+                    } else {
+                        request.setStatus(RequestStatus.REJECTED);
+                        ParticipationRequestDto rejectedRequest = requestMapper.toParticipationRequestDto(requestRepository.save(request));
+                        rejectedRequests.add(rejectedRequest);
+                    }
+                } else {
+                    request.setStatus(eventRequest.getStatus());
+                    ParticipationRequestDto rejectedRequest = requestMapper.toParticipationRequestDto(requestRepository.save(request));
+                    rejectedRequests.add(rejectedRequest);
+                }
+            }
+        }
+
+        EventRequestStatusUpdateResult resultRequest = new EventRequestStatusUpdateResult();
+        resultRequest.setConfirmedRequests(confirmedRequests);
+        resultRequest.setRejectedRequests(rejectedRequests);
+        return resultRequest;
     }
 }
