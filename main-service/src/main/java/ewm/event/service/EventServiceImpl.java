@@ -45,7 +45,7 @@ public class EventServiceImpl implements EventService {
     private final LocationMapper locationMapper;
 
     @Override
-    public List<EventShortDto> publicGetAllEvents(ReqParam reqParam) {
+    public List<EventShortDto> getAllEvents(ReqParam reqParam) {
         Pageable pageable = PageRequest.of(reqParam.getFrom(), reqParam.getSize());
         List<EventShortDto> eventShortDtos = eventMapper.toEventShortDto(eventRepository.findEvents(
                 reqParam.getText(),
@@ -64,18 +64,16 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventFullDto> publicGetAllEvents(AdminEventParams params) {
+    public List<EventFullDto> getAllEvents(AdminEventParams params) {
         Pageable pageable = PageRequest.of(params.getFrom(), params.getSize());
 
-        List<EventFullDto> eventFullDtos = eventMapper.toEventFullDtos(eventRepository.findAdminEvents(
+        return eventMapper.toEventFullDtos(eventRepository.findAdminEvents(
                 params.getUsers(),
                 params.getStates(),
                 params.getCategories(),
                 params.getRangeStart(),
                 params.getRangeEnd(),
                 pageable));
-
-        return eventFullDtos;
     }
 
     @Override

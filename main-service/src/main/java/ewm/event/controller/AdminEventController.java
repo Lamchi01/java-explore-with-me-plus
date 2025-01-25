@@ -42,7 +42,7 @@ public class AdminEventController {
         }
 
         AdminEventParams adminEventParams = new AdminEventParams(users, states, categories, rangeStart, rangeEnd, from, size);
-        return eventService.publicGetAllEvents(adminEventParams);
+        return eventService.getAllEvents(adminEventParams);
     }
 
     @PatchMapping("/{eventId}")
