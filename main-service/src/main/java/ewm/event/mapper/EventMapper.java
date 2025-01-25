@@ -6,15 +6,16 @@ import ewm.event.dto.NewEventDto;
 import ewm.event.model.Event;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-@Mapper(componentModel = "spring")
-public interface EventMapper {
+import static ewm.utility.Constants.FORMAT_DATETIME;
 
-    static final String FORMAT_DATETIME = "yyyy-MM-dd HH:mm:ss";
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+public interface EventMapper {
 
     @Mapping(target = "views", ignore = true)
     @Mapping(target = "confirmedRequests", ignore = true)
