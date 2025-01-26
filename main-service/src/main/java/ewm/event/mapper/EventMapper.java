@@ -28,6 +28,9 @@ public interface EventMapper {
     @Mapping(target = "publishedOn", ignore = true)
     @Mapping(target = "createdOn", ignore = true)
     @Mapping(target = "eventDate", source = "eventDate")
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "initiator", ignore = true)
+    @Mapping(target = "state", ignore = true)
     Event toEvent(NewEventDto newEventDto);
 
     default LocalDateTime stringToLocalDateTime(String stringDate) {

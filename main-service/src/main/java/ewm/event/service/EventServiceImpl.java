@@ -14,6 +14,9 @@ import ewm.event.repository.EventRepository;
 import ewm.event.repository.LocationRepository;
 import ewm.exception.EntityNotFoundException;
 import ewm.exception.ValidationException;
+import ewm.requests.model.Request;
+import ewm.requests.model.RequestStatus;
+import ewm.requests.repository.RequestRepository;
 import ewm.user.model.User;
 import ewm.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,10 +26,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +38,7 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final LocationRepository locationRepository;
+    private final RequestRepository requestRepository;
     private static final String FORMAT_DATETIME = "yyyy-MM-dd HH:mm:ss";
 
     @Override
@@ -51,10 +53,11 @@ public class EventServiceImpl implements EventService {
                 reqParam.getOnlyAvailable(),
                 pageable
         ));
-        List<EventShortDto> addedViews = eventShortDtos.stream().map(this::addViews).toList();
+        List<EventShortDto> addedViews = addViews(eventShortDtos);
+        List<EventShortDto> addedRequests = addRequests(addedViews);
         return switch (reqParam.getSort()) {
-            case EVENT_DATE -> addedViews.stream().sorted(Comparator.comparing(EventShortDto::getEventDate)).toList();
-            case VIEWS -> addedViews.stream().sorted(Comparator.comparing(EventShortDto::getViews)).toList();
+            case EVENT_DATE -> addedRequests.stream().sorted(Comparator.comparing(EventShortDto::getEventDate)).toList();
+            case VIEWS -> addedRequests.stream().sorted(Comparator.comparing(EventShortDto::getViews)).toList();
         };
     }
 
@@ -91,10 +94,9 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new EntityNotFoundException(User.class, "Пользователь не найден"));
         Pageable pageable = PageRequest.of(from, size);
         List<Event> events = eventRepository.findAllByInitiatorId(userId, pageable);
-
-        // нужно добавить просмотры и запросы
-
-        return eventMapper.toEventShortDto(events);
+        List<EventShortDto> eventShortDtos = eventMapper.toEventShortDto(events);
+        List<EventShortDto> addedViews = addViews(eventShortDtos);
+        return addRequests(addedViews);
     }
 
     @Override
@@ -104,10 +106,8 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findByIdAndInitiatorId(userId, eventId)
                 .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие не найдено"));
         EventFullDto result = eventMapper.toEventFullDto(event);
-
-        // нужно добавить просмотры и запросы
-
-        return result;
+        EventFullDto addedViews = addViews(result);
+        return addRequests(addedViews);
     }
 
     @Override
@@ -163,19 +163,22 @@ public class EventServiceImpl implements EventService {
         return eventMapper.toEventFullDto(eventRepository.save(event));
     }
 
-    private EventFullDto addViews(EventFullDto eventDto) {
+    private List<EventShortDto> addViews(List<EventShortDto> eventDtos) {
+        HashMap<String, EventShortDto> eventDtoMap = new HashMap<>();
         List<String> gettingUris = new ArrayList<>();
-        gettingUris.add("/events/" + eventDto.getId());
+        for (EventShortDto dto : eventDtos) {
+            String uri = "/events/" + dto.getId();
+            eventDtoMap.put(uri, dto);
+            gettingUris.add(uri);
+        }
         ParamDto paramDto = new ParamDto(LocalDateTime.now().minusYears(1), LocalDateTime.now(), gettingUris, true);
-        Long views = statClient.getStat(paramDto)
+        statClient.getStat(paramDto)
                 .stream()
-                .map(ViewStats::getHits)
-                .reduce(0L, Long::sum);
-        eventDto.setViews(views);
-        return eventDto;
+                .peek(viewStats ->  eventDtoMap.get(viewStats.getUri()).setViews(viewStats.getHits()));
+        return eventDtoMap.values().stream().toList();
     }
 
-    private EventShortDto addViews(EventShortDto eventShortDto) {
+    private EventFullDto addViews(EventFullDto eventShortDto) {
         List<String> gettingUris = new ArrayList<>();
         gettingUris.add("/events/" + eventShortDto.getId());
         ParamDto paramDto = new ParamDto(LocalDateTime.now().minusYears(1), LocalDateTime.now(), gettingUris, true);
@@ -183,5 +186,21 @@ public class EventServiceImpl implements EventService {
                 .stream().map(ViewStats::getHits).reduce(0L, Long::sum);
         eventShortDto.setViews(views);
         return eventShortDto;
+    }
+
+    private List<EventShortDto> addRequests(List<EventShortDto> eventDtos) {
+        List<Long> eventIds = eventDtos.stream().map(EventShortDto::getId).toList();
+        List<Request> requests = requestRepository.findAllByEventIdInAndStatus(eventIds, RequestStatus.CONFIRMED);
+        Map<Long, Long> requestsMap = requests.stream()
+                .collect(Collectors.groupingBy(request -> request.getEvent().getId(), Collectors.counting()));
+        eventDtos.forEach(eventDto -> eventDto.setConfirmedRequests(requestsMap.getOrDefault(eventDto.getId(), 0L)));
+        return eventDtos;
+    }
+
+    private EventFullDto addRequests(EventFullDto eventDto) {
+        eventDto.setConfirmedRequests(
+                requestRepository.countByEventIdAndStatus(eventDto.getId(), RequestStatus.CONFIRMED)
+        );
+        return eventDto;
     }
 }
