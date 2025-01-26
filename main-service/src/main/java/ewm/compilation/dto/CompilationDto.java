@@ -20,5 +20,4 @@ public class CompilationDto {
     @NotBlank(message = "Название подборки не может быть пустым")
     private String title;
 
-
 }
