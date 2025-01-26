@@ -6,7 +6,9 @@ import java.util.List;
 
 public interface EventService {
 
-    List<EventShortDto> publicGetAllEvents(ReqParam reqParam);
+    List<EventShortDto> getAllEvents(ReqParam reqParam);
+
+    List<EventFullDto> getAllEvents(AdminEventParams params);
 
     EventFullDto publicGetEvent(long id);
 
@@ -17,4 +19,7 @@ public interface EventService {
     EventFullDto findUserEventById(Long userId, Long eventId);
 
     EventFullDto updateEventByUser(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest);
+
+    EventFullDto update(Long eventId, UpdateEventAdminRequest updateEventAdminRequest);
+
 }

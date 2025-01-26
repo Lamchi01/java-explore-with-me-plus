@@ -15,11 +15,13 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static ewm.utility.Constants.FORMAT_DATETIME;
+
 @RestController
 @RequestMapping("/events")
 @RequiredArgsConstructor
 public class PublicEventController {
-    private static final String FORMAT_DATETIME = "yyyy-MM-dd HH:mm:ss";
+
     private static final String MAIN_SERVICE = "ewm-main-service";
     private final EventService eventService;
     private final RestStatClient statClient;
@@ -46,7 +48,7 @@ public class PublicEventController {
                 .from(from)
                 .size(size)
                 .build();
-        List<EventShortDto> events = eventService.publicGetAllEvents(reqParam);
+        List<EventShortDto> events = eventService.getAllEvents(reqParam);
         hit(request);
         return events;
     }

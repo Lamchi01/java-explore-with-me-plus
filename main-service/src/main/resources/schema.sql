@@ -44,3 +44,14 @@ CREATE TABLE IF NOT EXISTS requests
     created_at   TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     status       VARCHAR(20)                 NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS compilations (
+    id      BIGSERIAL PRIMARY KEY,
+    pinned  BOOLEAN NOT NULL DEFAULT FALSE,
+    title   VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS compilation_events (
+    compilation_id  BIGINT NOT NULL REFERENCES compilations(id) ON DELETE CASCADE,
+    event_id        BIGINT NOT NULL REFERENCES events(id) ON DELETE CASCADE
+);

@@ -38,6 +38,22 @@ public class ErrorHandlerControllerAdvice {
         return new ApiError("FORBIDDEN", "entity update forbidden", stackTrace, LocalDateTime.now().toString());
     }
 
+    @ExceptionHandler({ConditionNotMetException.class})
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError onConditionNotMetException(final ConditionNotMetException e) {
+        log.error("ConditionNotMetException - 409: {}", e.getMessage(), e);
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        String stackTrace = sw.toString();
+        return new ApiError(
+                "CONFLICT",
+                "For the requested operation the conditions are not met.",
+                stackTrace,
+                LocalDateTime.now().toString()
+        );
+    }
+
     @ExceptionHandler({DataIntegrityViolationException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError onDataIntegrityViolationException(final DataIntegrityViolationException e) {
