@@ -7,7 +7,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @AllArgsConstructor
-public class EventFullDto extends EventBaseDto{
+public class EventFullDto extends EventBaseDto {
     private String createdOn;
     private String description;
     private String eventDate;

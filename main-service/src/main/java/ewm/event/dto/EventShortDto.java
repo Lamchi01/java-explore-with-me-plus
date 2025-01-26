@@ -7,6 +7,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @AllArgsConstructor
-public class EventShortDto extends EventBaseDto{
+public class EventShortDto extends EventBaseDto {
     private String eventDate;
 }

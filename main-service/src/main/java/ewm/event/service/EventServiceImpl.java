@@ -105,8 +105,8 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto update(Long eventId, UpdateEventAdminRequest updateEventAdminRequest) {
-        Event event = eventRepository.findById(eventId).
-                orElseThrow(() -> new EntityNotFoundException(Event.class, " c ID = " + eventId + ", не найдено."));
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException(Event.class, " c ID = " + eventId + ", не найдено."));
 
         if ((event.getPublishedOn() != null) && updateEventAdminRequest.getEventDate().isAfter(event.getPublishedOn().minusHours(1))) {
             throw new ConditionNotMetException("Дата начала изменяемого события должна быть не ранее чем за час от даты публикации");
