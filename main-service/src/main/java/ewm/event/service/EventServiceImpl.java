@@ -5,21 +5,17 @@ import ewm.ViewStats;
 import ewm.category.model.Category;
 import ewm.category.repository.CategoryRepository;
 import ewm.client.RestStatClient;
-import ewm.exception.EntityNotFoundException;
-import ewm.event.dto.EventFullDto;
-import ewm.event.dto.EventShortDto;
-import ewm.event.dto.NewEventDto;
-import ewm.event.dto.ReqParam;
+import ewm.event.dto.*;
 import ewm.event.mapper.EventMapper;
 import ewm.event.model.Event;
 import ewm.event.model.EventState;
+import ewm.event.model.Location;
 import ewm.event.repository.EventRepository;
-
 import ewm.event.repository.LocationRepository;
+import ewm.exception.EntityNotFoundException;
 import ewm.exception.ValidationException;
 import ewm.user.model.User;
 import ewm.user.repository.UserRepository;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -94,7 +91,76 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new EntityNotFoundException(User.class, "Пользователь не найден"));
         Pageable pageable = PageRequest.of(from, size);
         List<Event> events = eventRepository.findAllByInitiatorId(userId, pageable);
+
+        // нужно добавить просмотры и запросы
+
         return eventMapper.toEventShortDto(events);
+    }
+
+    @Override
+    public EventFullDto findUserEventById(Long userId, Long eventId) {
+        User initiator = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(User.class, "Пользователь не найден"));
+        Event event = eventRepository.findByIdAndInitiatorId(userId, eventId)
+                .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие не найдено"));
+        EventFullDto result = eventMapper.toEventFullDto(event);
+
+        // нужно добавить просмотры и запросы
+
+        return result;
+    }
+
+    @Override
+    public EventFullDto updateEventByUser(Long userId, Long eventId, UpdateEventUserRequest updateRequest) {
+        User initiator = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(User.class, "Пользователь не найден"));
+        Event event = eventRepository.findByIdAndInitiatorId(userId, eventId)
+                .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие не найдено"));
+        LocalDateTime eventDate;
+        if (updateRequest.getEventDate() != null) {
+            eventDate = LocalDateTime.parse(updateRequest.getEventDate(),
+                    DateTimeFormatter.ofPattern(FORMAT_DATETIME));
+            if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
+                throw new ValidationException(NewEventDto.class, "До начала события осталось меньше двух часов");
+            }
+            event.setEventDate(eventDate);
+        }
+        Category category;
+        if (updateRequest.getCategory() != null) {
+            category = categoryRepository.findById(updateRequest.getCategory())
+                    .orElseThrow(() -> new EntityNotFoundException(Category.class, "Категория не найден"));
+            event.setCategory(category);
+        }
+        if (updateRequest.getLocation() != null) {
+            Optional<Location> locationOpt = locationRepository.findByLatAndLon(
+                    updateRequest.getLocation().getLat(),
+                    updateRequest.getLocation().getLon());
+            Location location = locationOpt.orElse(locationRepository.save(
+                    new Location(null, updateRequest.getLocation().getLat(), updateRequest.getLocation().getLon())));
+            event.setLocation(location);
+        }
+        if (updateRequest.getAnnotation() != null && !updateRequest.getAnnotation().isBlank()) {
+            event.setAnnotation(updateRequest.getAnnotation());
+        }
+        if (updateRequest.getDescription() != null && !updateRequest.getDescription().isBlank()) {
+            event.setDescription(updateRequest.getDescription());
+        }
+        if (updateRequest.getPaid() != null) {
+            event.setPaid(updateRequest.getPaid());
+        }
+        if (updateRequest.getParticipantLimit() != null && updateRequest.getParticipantLimit() >= 0) {
+            event.setParticipantLimit(updateRequest.getParticipantLimit());
+        }
+        if (updateRequest.getRequestModeration() != null) {
+            event.setRequestModeration(updateRequest.getRequestModeration());
+        }
+        if (updateRequest.getTitle() != null && !updateRequest.getTitle().isBlank()) {
+            event.setTitle(updateRequest.getTitle());
+        }
+
+        // добавить изменение в state
+
+        return eventMapper.toEventFullDto(eventRepository.save(event));
     }
 
     private EventFullDto addViews(EventFullDto eventDto) {

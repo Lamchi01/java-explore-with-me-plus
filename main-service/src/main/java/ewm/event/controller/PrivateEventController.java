@@ -3,6 +3,7 @@ package ewm.event.controller;
 import ewm.event.dto.EventFullDto;
 import ewm.event.dto.EventShortDto;
 import ewm.event.dto.NewEventDto;
+import ewm.event.dto.UpdateEventUserRequest;
 import ewm.event.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,5 +34,18 @@ public class PrivateEventController {
             @RequestParam(name = "size", defaultValue = "10") Integer size
     ) {
         return service.findUserEvents(userId, from, size);
+    }
+
+    @GetMapping("/{eventId}")
+    public EventFullDto findUserEventById(@PathVariable(name = "userId") Long userId,
+                                          @PathVariable(name = "eventId") Long eventId) {
+        return service.findUserEventById(userId, eventId);
+    }
+
+    @PatchMapping("/{eventId}")
+    public EventFullDto updateEventByUser(@PathVariable(name = "userId") Long userId,
+                                          @PathVariable(name = "eventId") Long eventId,
+                                          @Valid @RequestBody UpdateEventUserRequest updateRequest) {
+        return service.updateEventByUser(userId, eventId, updateRequest);
     }
 }
