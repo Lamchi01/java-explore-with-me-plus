@@ -1,9 +1,6 @@
 package ewm.event.service;
 
-import ewm.event.dto.EventFullDto;
-import ewm.event.dto.EventShortDto;
-import ewm.event.dto.NewEventDto;
-import ewm.event.dto.ReqParam;
+import ewm.event.dto.*;
 
 import java.util.List;
 
@@ -13,6 +10,11 @@ public interface EventService {
 
     EventFullDto publicGetEvent(long id);
 
-    EventFullDto create(long userId, NewEventDto newEventDto);
+    EventFullDto create(Long userId, NewEventDto newEventDto);
 
+    List<EventShortDto> findUserEvents(Long userId, Integer from, Integer size);
+
+    EventFullDto findUserEventById(Long userId, Long eventId);
+
+    EventFullDto updateEventByUser(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest);
 }
