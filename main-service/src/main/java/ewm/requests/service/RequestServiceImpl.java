@@ -121,23 +121,32 @@ public class RequestServiceImpl implements RequestService {
             throw new ParticipantLimitException("Достигнут лимит участников для данного события.");
         }
 
+        List<Request> updatedRequests = new ArrayList<>();
+
         for (Request request : requests) {
             if (request.getStatus().equals(RequestStatus.PENDING)) {
                 if (eventRequest.getStatus().equals(RequestStatus.CONFIRMED)) {
                     if (confirmedRequestsCount <= event.getParticipantLimit()) {
                         request.setStatus(RequestStatus.CONFIRMED);
-                        ParticipationRequestDto confirmedRequest = requestMapper.toParticipationRequestDto(requestRepository.save(request));
-                        confirmedRequests.add(confirmedRequest);
+                        updatedRequests.add(request);
+                        confirmedRequestsCount++;
                     } else {
                         request.setStatus(RequestStatus.REJECTED);
-                        ParticipationRequestDto rejectedRequest = requestMapper.toParticipationRequestDto(requestRepository.save(request));
-                        rejectedRequests.add(rejectedRequest);
+                        updatedRequests.add(request);
                     }
                 } else {
                     request.setStatus(eventRequest.getStatus());
-                    ParticipationRequestDto rejectedRequest = requestMapper.toParticipationRequestDto(requestRepository.save(request));
-                    rejectedRequests.add(rejectedRequest);
+                    updatedRequests.add(request);
                 }
+            }
+        }
+
+        List<Request> savedRequests = requestRepository.saveAll(updatedRequests);
+        for (Request request : savedRequests) {
+            if (request.getStatus().equals(RequestStatus.CONFIRMED)) {
+                confirmedRequests.add(requestMapper.toParticipationRequestDto(request));
+            } else {
+                rejectedRequests.add(requestMapper.toParticipationRequestDto(request));
             }
         }
 
