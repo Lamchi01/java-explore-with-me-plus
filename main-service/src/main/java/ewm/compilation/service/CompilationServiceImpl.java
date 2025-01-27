@@ -41,16 +41,26 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     public void delete(Long id) {
         compilationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(Compilation.class, " c ID = " + id + ", не найден"));
+                .orElseThrow(() -> new EntityNotFoundException(Compilation.class, "(Подборка) c ID = " + id + ", не найдена"));
 
         compilationRepository.deleteById(id);
     }
 
     @Override
     public CompilationDto update(Long id, UpdateCompilationRequest updateCompilationRequest) {
-
-        return null;
-
+        Compilation compilation = compilationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(Compilation.class, "(Подборка) c ID = " + id + ", не найдена"));
+        if (updateCompilationRequest.getTitle() != null) {
+            compilation.setTitle(updateCompilationRequest.getTitle());
+        }
+        if (updateCompilationRequest.getPinned() != null) {
+            compilation.setPinned(updateCompilationRequest.getPinned());
+        }
+        if (updateCompilationRequest.getEvents() != null) {
+            List<Event> events = eventRepository.findAllByIdIsIn(updateCompilationRequest.getEvents());
+            compilation.setEvents(events);
+        }
+        return compilationMapper.toCompilationDto(compilationRepository.save(compilation));
     }
 
     @Override

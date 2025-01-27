@@ -1,9 +1,11 @@
 package ewm.error;
 
 import ewm.exception.*;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -11,10 +13,50 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
 public class ErrorHandlerControllerAdvice {
+
+//  перехват эксепшенов валидации
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ValidationErrorResponse onConstraintValidationException(
+            ConstraintViolationException e
+    ) {
+        final List<ValidationViolation> validationViolations = e.getConstraintViolations().stream()
+                .map(
+                        violation -> {
+                            log.error("ConstraintViolationException: {} : {}", violation.getPropertyPath().toString(), violation.getMessage());
+                            return new ValidationViolation(
+                                    violation.getPropertyPath().toString(),
+                                    violation.getMessage()
+                            );
+                        }
+                )
+                .collect(Collectors.toList());
+
+        return new ValidationErrorResponse(validationViolations);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ValidationErrorResponse onMethodArgumentNotValidException(
+            MethodArgumentNotValidException e
+    ) {
+        final List<ValidationViolation> validationViolations = e.getBindingResult().getFieldErrors().stream()
+                .map(error -> {
+                            log.error("MethodArgumentNotValidException: {} : {}", error.getField(), error.getDefaultMessage());
+                            return new ValidationViolation(error.getField(), error.getDefaultMessage());
+                        }
+                )
+                .collect(Collectors.toList());
+
+        return new ValidationErrorResponse(validationViolations);
+    }
+
 
     @ExceptionHandler({EntityNotFoundException.class, OperationUnnecessaryException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)

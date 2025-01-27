@@ -153,6 +153,9 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new EntityNotFoundException(User.class, "Пользователь не найден"));
         Event event = eventRepository.findByIdAndInitiatorId(userId, eventId)
                 .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие не найдено"));
+        if (Objects.equals(initiator.getId(), event.getInitiator().getId())) {
+            throw new ConditionNotMetException("Изменение опубликованного события от имени пользователя");
+        }
         if (event.getState() == EventState.PUBLISHED) {
             throw new InitiatorRequestException("Нельзя отредактировать опубликованное событие");
         }
