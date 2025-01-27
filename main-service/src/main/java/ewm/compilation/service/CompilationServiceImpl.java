@@ -10,8 +10,11 @@ import ewm.event.model.Event;
 import ewm.event.repository.EventRepository;
 import ewm.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.List;
 
 @Service
@@ -50,5 +53,25 @@ public class CompilationServiceImpl implements CompilationService {
 
     }
 
+    @Override
+    public Collection<CompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) {
 
+        Pageable pageable = PageRequest.of(from, size);
+        List<Compilation> compilations = compilationRepository.findAllByPinned(pinned, pageable);
+
+        // добавить просмотры и запросы в eventShortDto
+
+        return compilationMapper.toCompilationDtos(compilations);
+    }
+
+    @Override
+    public CompilationDto getCompilationById(Long compId) {
+
+        Compilation compilation = compilationRepository.findById(compId)
+                .orElseThrow(() -> new EntityNotFoundException(Compilation.class, "Подборка событий не найдена"));
+
+        // добавить просмотры и запросы в eventShortDto
+
+        return compilationMapper.toCompilationDto(compilation);
+    }
 }

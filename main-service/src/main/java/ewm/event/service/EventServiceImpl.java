@@ -59,7 +59,8 @@ public class EventServiceImpl implements EventService {
         List<EventShortDto> addedViews = addViews(eventShortDtos);
         List<EventShortDto> addedRequests = addRequests(addedViews);
         return switch (reqParam.getSort()) {
-            case EVENT_DATE -> addedRequests.stream().sorted(Comparator.comparing(EventShortDto::getEventDate)).toList();
+            case EVENT_DATE ->
+                    addedRequests.stream().sorted(Comparator.comparing(EventShortDto::getEventDate)).toList();
             case VIEWS -> addedRequests.stream().sorted(Comparator.comparing(EventShortDto::getViews)).toList();
         };
     }
@@ -152,7 +153,7 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new EntityNotFoundException(User.class, "Пользователь не найден"));
         Event event = eventRepository.findByIdAndInitiatorId(userId, eventId)
                 .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие не найдено"));
-        if (event.getState() == EventState.PUBLISHED){
+        if (event.getState() == EventState.PUBLISHED) {
             throw new InitiatorRequestException("Нельзя отредактировать опубликованное событие");
         }
         LocalDateTime eventDate;
