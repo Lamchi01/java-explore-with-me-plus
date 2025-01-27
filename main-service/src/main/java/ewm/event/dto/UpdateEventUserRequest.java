@@ -1,5 +1,6 @@
 package ewm.event.dto;
 
+import ewm.event.model.PrivateStateAction;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -14,5 +15,6 @@ public class UpdateEventUserRequest {
     private Boolean paid;
     private Long participantLimit;
     private Boolean requestModeration;
+    private PrivateStateAction stateAction;
     private String title;
 }

@@ -6,16 +6,14 @@ import ewm.category.model.Category;
 import ewm.category.repository.CategoryRepository;
 import ewm.client.RestStatClient;
 import ewm.event.dto.*;
-import ewm.event.mapper.LocationMapper;
-import ewm.event.model.AdminStateAction;
-import ewm.event.model.Location;
-import ewm.exception.ConditionNotMetException;
-import ewm.exception.EntityNotFoundException;
 import ewm.event.mapper.EventMapper;
-import ewm.event.model.Event;
-import ewm.event.model.EventState;
+import ewm.event.mapper.LocationMapper;
+import ewm.event.model.*;
 import ewm.event.repository.EventRepository;
 import ewm.event.repository.LocationRepository;
+import ewm.exception.ConditionNotMetException;
+import ewm.exception.EntityNotFoundException;
+import ewm.exception.InitiatorRequestException;
 import ewm.exception.ValidationException;
 import ewm.requests.model.Request;
 import ewm.requests.model.RequestStatus;
@@ -44,7 +42,6 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final LocationRepository locationRepository;
     private final RequestRepository requestRepository;
-    private static final String FORMAT_DATETIME = "yyyy-MM-dd HH:mm:ss";
     private final LocationMapper locationMapper;
 
     @Override
@@ -155,6 +152,9 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new EntityNotFoundException(User.class, "Пользователь не найден"));
         Event event = eventRepository.findByIdAndInitiatorId(userId, eventId)
                 .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие не найдено"));
+        if (event.getState() == EventState.PUBLISHED){
+            throw new InitiatorRequestException("Нельзя отредактировать опубликованное событие");
+        }
         LocalDateTime eventDate;
         if (updateRequest.getEventDate() != null) {
             eventDate = LocalDateTime.parse(updateRequest.getEventDate(),
@@ -196,9 +196,14 @@ public class EventServiceImpl implements EventService {
         if (updateRequest.getTitle() != null && !updateRequest.getTitle().isBlank()) {
             event.setTitle(updateRequest.getTitle());
         }
-
-        // добавить изменение в state
-
+        if (updateRequest.getStateAction() != null) {
+            if (updateRequest.getStateAction() == PrivateStateAction.CANCEL_REVIEW) {
+                event.setState(EventState.CANCELED);
+            }
+            if (updateRequest.getStateAction() == PrivateStateAction.SEND_TO_REVIEW) {
+                event.setState(EventState.PENDING);
+            }
+        }
         return eventMapper.toEventFullDto(eventRepository.save(event));
     }
 
@@ -213,7 +218,22 @@ public class EventServiceImpl implements EventService {
         ParamDto paramDto = new ParamDto(LocalDateTime.now().minusYears(1), LocalDateTime.now(), gettingUris, true);
         statClient.getStat(paramDto)
                 .stream()
-                .peek(viewStats ->  eventDtoMap.get(viewStats.getUri()).setViews(viewStats.getHits()));
+                .peek(viewStats -> eventDtoMap.get(viewStats.getUri()).setViews(viewStats.getHits()));
+        return eventDtoMap.values().stream().toList();
+    }
+
+    private List<EventFullDto> addViewsFullDto(List<EventFullDto> eventDtos) {
+        HashMap<String, EventFullDto> eventDtoMap = new HashMap<>();
+        List<String> gettingUris = new ArrayList<>();
+        for (EventFullDto dto : eventDtos) {
+            String uri = "/events/" + dto.getId();
+            eventDtoMap.put(uri, dto);
+            gettingUris.add(uri);
+        }
+        ParamDto paramDto = new ParamDto(LocalDateTime.now().minusYears(1), LocalDateTime.now(), gettingUris, true);
+        statClient.getStat(paramDto)
+                .stream()
+                .peek(viewStats -> eventDtoMap.get(viewStats.getUri()).setViews(viewStats.getHits()));
         return eventDtoMap.values().stream().toList();
     }
 
@@ -270,6 +290,15 @@ public class EventServiceImpl implements EventService {
 
     private List<EventShortDto> addRequests(List<EventShortDto> eventDtos) {
         List<Long> eventIds = eventDtos.stream().map(EventShortDto::getId).toList();
+        List<Request> requests = requestRepository.findAllByEventIdInAndStatus(eventIds, RequestStatus.CONFIRMED);
+        Map<Long, Long> requestsMap = requests.stream()
+                .collect(Collectors.groupingBy(request -> request.getEvent().getId(), Collectors.counting()));
+        eventDtos.forEach(eventDto -> eventDto.setConfirmedRequests(requestsMap.getOrDefault(eventDto.getId(), 0L)));
+        return eventDtos;
+    }
+
+    private List<EventFullDto> addRequestsFullDto(List<EventFullDto> eventDtos) {
+        List<Long> eventIds = eventDtos.stream().map(EventFullDto::getId).toList();
         List<Request> requests = requestRepository.findAllByEventIdInAndStatus(eventIds, RequestStatus.CONFIRMED);
         Map<Long, Long> requestsMap = requests.stream()
                 .collect(Collectors.groupingBy(request -> request.getEvent().getId(), Collectors.counting()));
