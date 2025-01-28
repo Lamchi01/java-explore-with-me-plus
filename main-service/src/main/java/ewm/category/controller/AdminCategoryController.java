@@ -3,6 +3,7 @@ package ewm.category.controller;
 import ewm.category.dto.CategoryDto;
 import ewm.category.dto.NewCategoryDto;
 import ewm.category.service.CategoryService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -17,7 +18,7 @@ public class AdminCategoryController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public CategoryDto createCategory(@RequestBody NewCategoryDto newCategoryDto) {
+    public CategoryDto createCategory(@Valid @RequestBody NewCategoryDto newCategoryDto) {
         return categoryService.createCategory(newCategoryDto);
     }
 
@@ -29,7 +30,7 @@ public class AdminCategoryController {
 
     @PatchMapping("/{id}")
     public CategoryDto updateCategory(@PathVariable Long id,
-                                      @RequestBody NewCategoryDto categoryDto) {
+                                      @Valid @RequestBody NewCategoryDto categoryDto) {
         return categoryService.updateCategory(id, categoryDto);
     }
 }

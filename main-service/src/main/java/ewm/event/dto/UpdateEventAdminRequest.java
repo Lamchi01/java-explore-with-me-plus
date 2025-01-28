@@ -2,6 +2,7 @@ package ewm.event.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import ewm.event.model.AdminStateAction;
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
@@ -31,6 +32,7 @@ public class UpdateEventAdminRequest {
 
     @DateTimeFormat(pattern = FORMAT_DATETIME)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = FORMAT_DATETIME)
+    @Future
     private LocalDateTime eventDate;
 
     private LocationDto location;
