@@ -10,6 +10,6 @@ public interface RequestMapper {
 
     @Mapping(target = "event", source = "event.id")
     @Mapping(target = "requester", source = "requester.id")
-    @Mapping(target = "created", source = "createdOn")
+    @Mapping(target = "created", source = "createdOn", dateFormat = "yyyy-MM-dd HH:mm:ss")
     ParticipationRequestDto toParticipationRequestDto(Request request);
 }

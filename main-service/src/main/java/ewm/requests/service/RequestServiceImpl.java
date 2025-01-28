@@ -60,19 +60,17 @@ public class RequestServiceImpl implements RequestService {
             throw new ParticipantLimitException("Достигнут лимит участников для данного события.");
         }
 
+        request.setCreatedOn(LocalDateTime.now());
         if (event.getParticipantLimit() == 0) {
             request.setStatus(RequestStatus.CONFIRMED);
-            request.setCreatedOn(LocalDateTime.now());
             return requestMapper.toParticipationRequestDto(requestRepository.save(request));
         }
 
         if (event.getRequestModeration()) {
             request.setStatus(RequestStatus.PENDING);
-            request.setCreatedOn(LocalDateTime.now());
             return requestMapper.toParticipationRequestDto(requestRepository.save(request));
         } else {
             request.setStatus(RequestStatus.CONFIRMED);
-            request.setCreatedOn(LocalDateTime.now());
         }
         return requestMapper.toParticipationRequestDto(requestRepository.save(request));
     }
