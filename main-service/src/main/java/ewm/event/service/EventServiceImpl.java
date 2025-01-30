@@ -1,7 +1,6 @@
 package ewm.event.service;
 
 import ewm.ParamDto;
-import ewm.ViewStats;
 import ewm.category.model.Category;
 import ewm.category.repository.CategoryRepository;
 import ewm.client.RestStatClient;
@@ -47,6 +46,11 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventShortDto> getAllEvents(ReqParam reqParam) {
         Pageable pageable = PageRequest.of(reqParam.getFrom(), reqParam.getSize());
+
+        if (reqParam.getRangeStart() == null || reqParam.getRangeEnd() == null) {
+            reqParam.setRangeStart(LocalDateTime.now());
+            reqParam.setRangeEnd(LocalDateTime.now().plusYears(1));
+        }
         List<EventShortDto> eventShortDtos = eventMapper.toEventShortDto(eventRepository.findEvents(
                 reqParam.getText(),
                 reqParam.getCategories(),
@@ -56,32 +60,50 @@ public class EventServiceImpl implements EventService {
                 reqParam.getOnlyAvailable(),
                 pageable
         ));
-        List<EventShortDto> addedViews = addViews(eventShortDtos);
-        List<EventShortDto> addedRequests = addRequests(addedViews);
-        return switch (reqParam.getSort()) {
-            case EVENT_DATE ->
-                    addedRequests.stream().sorted(Comparator.comparing(EventShortDto::getEventDate)).toList();
-            case VIEWS -> addedRequests.stream().sorted(Comparator.comparing(EventShortDto::getViews)).toList();
-        };
+        if (eventShortDtos.isEmpty()) {
+            throw new ValidationException(ReqParam.class, " События не найдены");
+        }
+        List<EventShortDto> addedRequests = addRequests(addViews(eventShortDtos));
+
+        if (reqParam.getSort() != null) {
+            return switch (reqParam.getSort()) {
+                case EVENT_DATE ->
+                        addedRequests.stream().sorted(Comparator.comparing(EventShortDto::getEventDate)).toList();
+                case VIEWS -> addedRequests.stream().sorted(Comparator.comparing(EventShortDto::getViews)).toList();
+            };
+        }
+        return addedRequests;
     }
 
     @Override
     public List<EventFullDto> getAllEvents(AdminEventParams params) {
         Pageable pageable = PageRequest.of(params.getFrom(), params.getSize());
 
-        return eventMapper.toEventFullDtos(eventRepository.findAdminEvents(
+        if (params.getRangeStart() == null || params.getRangeEnd() == null) {
+            params.setRangeStart(LocalDateTime.now());
+            params.setRangeEnd(LocalDateTime.now().plusYears(1));
+        }
+
+        List<EventFullDto> eventFullDtos = eventMapper.toEventFullDtos(eventRepository.findAdminEvents(
                 params.getUsers(),
                 params.getStates(),
                 params.getCategories(),
                 params.getRangeStart(),
                 params.getRangeEnd(),
                 pageable));
+
+        return addRequestsFullDto(addViewsFullDto(eventFullDtos));
     }
 
     @Override
     public EventFullDto publicGetEvent(long id) {
-        return addViews(eventMapper.toEventFullDto(eventRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие c ID - " + id + ", не найдено."))));
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие c ID - " + id + ", не найдено."));
+        if (event.getState() != EventState.PUBLISHED) {
+            throw new EntityNotFoundException(Event.class, " Событие c ID - " + id + ", ещё не опубликовано.");
+        }
+        EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
+        return addRequests(addViews(eventFullDto));
     }
 
     @Override
@@ -97,6 +119,24 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new EntityNotFoundException(Category.class, "Категория не найден"));
 
         Event event = eventMapper.toEvent(newEventDto);
+        if (newEventDto.getPaid() == null) {
+            event.setPaid(false);
+        }
+        if (newEventDto.getRequestModeration() == null) {
+            event.setRequestModeration(true);
+        }
+        if (newEventDto.getParticipantLimit() == null) {
+            event.setParticipantLimit(0L);
+        }
+        if (newEventDto.getPaid() == null) {
+            event.setPaid(false);
+        }
+        if (newEventDto.getRequestModeration() == null) {
+            event.setRequestModeration(true);
+        }
+        if (newEventDto.getParticipantLimit() == null) {
+            event.setParticipantLimit(0L);
+        }
         event.setInitiator(initiator);
         event.setCategory(category);
         event.setCreatedOn(LocalDateTime.now());
@@ -140,22 +180,18 @@ public class EventServiceImpl implements EventService {
     public EventFullDto findUserEventById(Long userId, Long eventId) {
         User initiator = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(User.class, "Пользователь не найден"));
-        Event event = eventRepository.findByIdAndInitiatorId(userId, eventId)
+        Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие не найдено"));
         EventFullDto result = eventMapper.toEventFullDto(event);
-        EventFullDto addedViews = addViews(result);
-        return addRequests(addedViews);
+        return addRequests(addViews(result));
     }
 
     @Override
     public EventFullDto updateEventByUser(Long userId, Long eventId, UpdateEventUserRequest updateRequest) {
         User initiator = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(User.class, "Пользователь не найден"));
-        Event event = eventRepository.findByIdAndInitiatorId(userId, eventId)
+        Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие не найдено"));
-        if (Objects.equals(initiator.getId(), event.getInitiator().getId())) {
-            throw new ConditionNotMetException("Изменение опубликованного события от имени пользователя");
-        }
         if (event.getState() == EventState.PUBLISHED) {
             throw new InitiatorRequestException("Нельзя отредактировать опубликованное событие");
         }
@@ -245,8 +281,7 @@ public class EventServiceImpl implements EventService {
         List<String> gettingUris = new ArrayList<>();
         gettingUris.add("/events/" + eventShortDto.getId());
         ParamDto paramDto = new ParamDto(LocalDateTime.now().minusYears(1), LocalDateTime.now(), gettingUris, true);
-        Long views = statClient.getStat(paramDto)
-                .stream().map(ViewStats::getHits).reduce(0L, Long::sum);
+        Long views = (long) statClient.getStat(paramDto).size();
         eventShortDto.setViews(views);
         return eventShortDto;
     }

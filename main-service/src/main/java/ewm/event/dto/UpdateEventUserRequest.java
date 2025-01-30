@@ -1,6 +1,7 @@
 package ewm.event.dto;
 
 import ewm.event.model.PrivateStateAction;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,7 +9,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class UpdateEventUserRequest {
-    @Size(max = 2000)
+    @Size(min = 20, max = 2000)
     private String annotation;
     private Long category;
     @Size(min = 20, max = 7000)
@@ -16,6 +17,7 @@ public class UpdateEventUserRequest {
     private String eventDate;
     private LocationDto location;
     private Boolean paid;
+    @Positive
     private Long participantLimit;
     private Boolean requestModeration;
     private PrivateStateAction stateAction;

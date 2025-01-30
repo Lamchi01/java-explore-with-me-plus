@@ -27,13 +27,13 @@ public class PublicEventController {
     private final RestStatClient statClient;
 
     @GetMapping
-    public List<EventShortDto> publicGetAllEvents(@RequestParam String text,
-                                                  @RequestParam List<Long> categories,
-                                                  @RequestParam Boolean paid,
-                                                  @RequestParam @DateTimeFormat(pattern = FORMAT_DATETIME) LocalDateTime rangeStart,
-                                                  @RequestParam @DateTimeFormat(pattern = FORMAT_DATETIME) LocalDateTime rangeEnd,
+    public List<EventShortDto> publicGetAllEvents(@RequestParam(required = false) String text,
+                                                  @RequestParam(required = false) List<Long> categories,
+                                                  @RequestParam(required = false) Boolean paid,
+                                                  @RequestParam(required = false) @DateTimeFormat(pattern = FORMAT_DATETIME) LocalDateTime rangeStart,
+                                                  @RequestParam(required = false) @DateTimeFormat(pattern = FORMAT_DATETIME) LocalDateTime rangeEnd,
                                                   @RequestParam(defaultValue = "false") Boolean onlyAvailable,
-                                                  @RequestParam EventSort sort,
+                                                  @RequestParam(required = false) EventSort sort,
                                                   @RequestParam(defaultValue = "0") int from,
                                                   @RequestParam(defaultValue = "10") int size,
                                                   HttpServletRequest request) {
