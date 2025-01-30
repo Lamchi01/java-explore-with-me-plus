@@ -69,8 +69,6 @@ public class CompilationServiceImpl implements CompilationService {
         Pageable pageable = PageRequest.of(from, size);
         List<Compilation> compilations = compilationRepository.findAllByPinned(pinned, pageable);
 
-        // добавить просмотры и запросы в eventShortDto
-
         return compilationMapper.toCompilationDtos(compilations);
     }
 
@@ -79,8 +77,6 @@ public class CompilationServiceImpl implements CompilationService {
 
         Compilation compilation = compilationRepository.findById(compId)
                 .orElseThrow(() -> new EntityNotFoundException(Compilation.class, "Подборка событий не найдена"));
-
-        // добавить просмотры и запросы в eventShortDto
 
         return compilationMapper.toCompilationDto(compilation);
     }
