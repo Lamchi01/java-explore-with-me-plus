@@ -159,6 +159,14 @@ public class EventServiceImpl implements EventService {
         if (updateEventAdminRequest.getStateAction() == AdminStateAction.REJECT_EVENT && event.getState() == EventState.PUBLISHED) {
             throw new ConditionNotMetException("Cобытие можно отклонить, только если оно еще не опубликовано");
         }
+        if (updateEventAdminRequest.getStateAction() != null) {
+            if (updateEventAdminRequest.getStateAction() == AdminStateAction.PUBLISH_EVENT) {
+                event.setState(EventState.PUBLISHED);
+            }
+            if (updateEventAdminRequest.getStateAction() == AdminStateAction.REJECT_EVENT) {
+                event.setState(EventState.CANCELED);
+            }
+        }
 
         checkEvent(event, updateEventAdminRequest);
         return eventMapper.toEventFullDto(eventRepository.save(event));
@@ -195,46 +203,11 @@ public class EventServiceImpl implements EventService {
         if (event.getState() == EventState.PUBLISHED) {
             throw new InitiatorRequestException("Нельзя отредактировать опубликованное событие");
         }
-        LocalDateTime eventDate;
+
         if (updateRequest.getEventDate() != null) {
-            eventDate = LocalDateTime.parse(updateRequest.getEventDate(),
-                    DateTimeFormatter.ofPattern(FORMAT_DATETIME));
-            if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
+            if (updateRequest.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
                 throw new ValidationException(NewEventDto.class, "До начала события осталось меньше двух часов");
             }
-            event.setEventDate(eventDate);
-        }
-        Category category;
-        if (updateRequest.getCategory() != null) {
-            category = categoryRepository.findById(updateRequest.getCategory())
-                    .orElseThrow(() -> new EntityNotFoundException(Category.class, "Категория не найден"));
-            event.setCategory(category);
-        }
-        if (updateRequest.getLocation() != null) {
-            Optional<Location> locationOpt = locationRepository.findByLatAndLon(
-                    updateRequest.getLocation().getLat(),
-                    updateRequest.getLocation().getLon());
-            Location location = locationOpt.orElse(locationRepository.save(
-                    new Location(null, updateRequest.getLocation().getLat(), updateRequest.getLocation().getLon())));
-            event.setLocation(location);
-        }
-        if (updateRequest.getAnnotation() != null && !updateRequest.getAnnotation().isBlank()) {
-            event.setAnnotation(updateRequest.getAnnotation());
-        }
-        if (updateRequest.getDescription() != null && !updateRequest.getDescription().isBlank()) {
-            event.setDescription(updateRequest.getDescription());
-        }
-        if (updateRequest.getPaid() != null) {
-            event.setPaid(updateRequest.getPaid());
-        }
-        if (updateRequest.getParticipantLimit() != null && updateRequest.getParticipantLimit() >= 0) {
-            event.setParticipantLimit(updateRequest.getParticipantLimit());
-        }
-        if (updateRequest.getRequestModeration() != null) {
-            event.setRequestModeration(updateRequest.getRequestModeration());
-        }
-        if (updateRequest.getTitle() != null && !updateRequest.getTitle().isBlank()) {
-            event.setTitle(updateRequest.getTitle());
         }
         if (updateRequest.getStateAction() != null) {
             if (updateRequest.getStateAction() == PrivateStateAction.CANCEL_REVIEW) {
@@ -244,6 +217,8 @@ public class EventServiceImpl implements EventService {
                 event.setState(EventState.PENDING);
             }
         }
+
+        checkEvent(event, updateRequest);
         return eventMapper.toEventFullDto(eventRepository.save(event));
     }
 
@@ -286,44 +261,40 @@ public class EventServiceImpl implements EventService {
         return eventShortDto;
     }
 
-    private void checkEvent(Event event, UpdateEventAdminRequest updateEventAdminRequest) {
-        if (updateEventAdminRequest.getAnnotation() != null) {
-            event.setAnnotation(updateEventAdminRequest.getAnnotation());
+    private void checkEvent(Event event, UpdateEventBaseRequest updateRequest) {
+        if (updateRequest.getAnnotation() != null && !updateRequest.getAnnotation().isBlank()) {
+            event.setAnnotation(updateRequest.getAnnotation());
         }
-        if (updateEventAdminRequest.getCategory() != null) {
-            Category category = categoryRepository.findById(updateEventAdminRequest.getCategory().longValue())
+        if (updateRequest.getCategory() != null) {
+            Category category = categoryRepository.findById(updateRequest.getCategory())
                     .orElseThrow(() -> new EntityNotFoundException(Category.class, "Категория не найдена"));
             event.setCategory(category);
         }
-        if (updateEventAdminRequest.getDescription() != null) {
-            event.setDescription(updateEventAdminRequest.getDescription());
+        if (updateRequest.getDescription() != null && !updateRequest.getDescription().isBlank()) {
+            event.setDescription(updateRequest.getDescription());
         }
-        if (updateEventAdminRequest.getEventDate() != null) {
-            event.setEventDate(updateEventAdminRequest.getEventDate());
+        if (updateRequest.getEventDate() != null) {
+            event.setEventDate(updateRequest.getEventDate());
         }
-        if (updateEventAdminRequest.getLocation() != null) {
-            Location location = locationRepository.save(locationMapper.toLocation(updateEventAdminRequest.getLocation()));
+        if (updateRequest.getLocation() != null) {
+            Optional<Location> locationOpt = locationRepository.findByLatAndLon(
+                    updateRequest.getLocation().getLat(),
+                    updateRequest.getLocation().getLon());
+            Location location = locationOpt.orElse(locationRepository.save(
+                    new Location(null, updateRequest.getLocation().getLat(), updateRequest.getLocation().getLon())));
             event.setLocation(location);
         }
-        if (updateEventAdminRequest.getPaid() != null) {
-            event.setPaid(updateEventAdminRequest.getPaid());
+        if (updateRequest.getPaid() != null) {
+            event.setPaid(updateRequest.getPaid());
         }
-        if (updateEventAdminRequest.getParticipantLimit() != null) {
-            event.setParticipantLimit(updateEventAdminRequest.getParticipantLimit().longValue());
+        if (updateRequest.getParticipantLimit() != null) {
+            event.setParticipantLimit(updateRequest.getParticipantLimit().longValue());
         }
-        if (updateEventAdminRequest.getRequestModeration() != null) {
-            event.setRequestModeration(updateEventAdminRequest.getRequestModeration());
+        if (updateRequest.getRequestModeration() != null) {
+            event.setRequestModeration(updateRequest.getRequestModeration());
         }
-        if (updateEventAdminRequest.getTitle() != null) {
-            event.setTitle(updateEventAdminRequest.getTitle());
-        }
-        if (updateEventAdminRequest.getStateAction() != null) {
-            if (updateEventAdminRequest.getStateAction() == AdminStateAction.PUBLISH_EVENT) {
-                event.setState(EventState.PUBLISHED);
-            }
-            if (updateEventAdminRequest.getStateAction() == AdminStateAction.REJECT_EVENT) {
-                event.setState(EventState.CANCELED);
-            }
+        if (updateRequest.getTitle() != null && !updateRequest.getTitle().isBlank()) {
+            event.setTitle(updateRequest.getTitle());
         }
     }
 

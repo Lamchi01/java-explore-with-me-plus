@@ -33,12 +33,6 @@ public class AdminEventController {
             @RequestParam(defaultValue = "0") int from,
             @RequestParam(defaultValue = "10") int size) {
 
-//        Set<EventState> stateSet = EventState.from(states);
-//
-//        if (stateSet == null || stateSet.isEmpty()) {
-//            throw new IllegalArgumentException("Некорректные значения states: " + states);
-//        }
-
         AdminEventParams adminEventParams = new AdminEventParams(users, states, categories, rangeStart, rangeEnd, from, size);
         return eventService.getAllEvents(adminEventParams);
     }
