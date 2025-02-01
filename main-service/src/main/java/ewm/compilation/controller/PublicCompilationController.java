@@ -3,7 +3,6 @@ package ewm.compilation.controller;
 import ewm.compilation.dto.CompilationDto;
 import ewm.compilation.service.CompilationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
@@ -11,7 +10,6 @@ import java.util.Collection;
 @RestController
 @RequestMapping(path = "/compilations")
 @RequiredArgsConstructor
-@Validated
 public class PublicCompilationController {
     private final CompilationService compilationService;
 
