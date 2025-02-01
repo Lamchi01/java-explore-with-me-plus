@@ -51,7 +51,7 @@ public class EventServiceImpl implements EventService {
             reqParam.setRangeStart(LocalDateTime.now());
             reqParam.setRangeEnd(LocalDateTime.now().plusYears(1));
         }
-        List<EventShortDto> eventShortDtos = eventMapper.toEventShortDto(eventRepository.findEvents(
+        List<EventFullDto> eventFullDtos = eventMapper.toEventFullDtos(eventRepository.findEvents(
                 reqParam.getText(),
                 reqParam.getCategories(),
                 reqParam.getPaid(),
@@ -60,10 +60,12 @@ public class EventServiceImpl implements EventService {
                 reqParam.getOnlyAvailable(),
                 pageable
         ));
-        if (eventShortDtos.isEmpty()) {
+        if (eventFullDtos.isEmpty()) {
             throw new ValidationException(ReqParam.class, " События не найдены");
         }
-        List<EventShortDto> addedRequests = addRequests(addViews(eventShortDtos));
+        addViews(eventFullDtos);
+        List<EventShortDto> eventShortDtos = eventMapper.toEventShortDtos(eventFullDtos);
+        List<EventShortDto> addedRequests = addRequests(eventShortDtos);
 
         if (reqParam.getSort() != null) {
             return switch (reqParam.getSort()) {
@@ -92,7 +94,7 @@ public class EventServiceImpl implements EventService {
                 params.getRangeEnd(),
                 pageable));
 
-        return addRequestsFullDto(addViewsFullDto(eventFullDtos));
+        return addRequestsFullDto(addViews(eventFullDtos));
     }
 
     @Override
@@ -179,9 +181,10 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new EntityNotFoundException(User.class, "Пользователь не найден"));
         Pageable pageable = PageRequest.of(from, size);
         List<Event> events = eventRepository.findAllByInitiatorId(userId, pageable);
+        List<EventFullDto> eventFullDtos = eventMapper.toEventFullDtos(events);
+        addViews(eventFullDtos);
         List<EventShortDto> eventShortDtos = eventMapper.toEventShortDto(events);
-        List<EventShortDto> addedViews = addViews(eventShortDtos);
-        return addRequests(addedViews);
+        return addRequests(eventShortDtos);
     }
 
     @Override
@@ -222,43 +225,39 @@ public class EventServiceImpl implements EventService {
         return eventMapper.toEventFullDto(eventRepository.save(event));
     }
 
-    private List<EventShortDto> addViews(List<EventShortDto> eventDtos) {
-        HashMap<String, EventShortDto> eventDtoMap = new HashMap<>();
-        List<String> gettingUris = new ArrayList<>();
-        for (EventShortDto dto : eventDtos) {
-            String uri = "/events/" + dto.getId();
-            eventDtoMap.put(uri, dto);
-            gettingUris.add(uri);
-        }
-        ParamDto paramDto = new ParamDto(LocalDateTime.now().minusYears(1), LocalDateTime.now(), gettingUris, true);
-        statClient.getStat(paramDto)
-                .stream()
-                .peek(viewStats -> eventDtoMap.get(viewStats.getUri()).setViews(viewStats.getHits()));
-        return eventDtoMap.values().stream().toList();
-    }
-
-    private List<EventFullDto> addViewsFullDto(List<EventFullDto> eventDtos) {
+    private List<EventFullDto> addViews(List<EventFullDto> eventDtos) {
         HashMap<String, EventFullDto> eventDtoMap = new HashMap<>();
         List<String> gettingUris = new ArrayList<>();
+        LocalDateTime earlyPublishDate = LocalDateTime.now().minusHours(1);
         for (EventFullDto dto : eventDtos) {
             String uri = "/events/" + dto.getId();
             eventDtoMap.put(uri, dto);
             gettingUris.add(uri);
+            if (dto.getPublishedOn() != null) {
+                LocalDateTime dtoPublishDate = LocalDateTime.parse(dto.getPublishedOn().formatted(FORMAT_DATETIME));
+                if (dtoPublishDate.isBefore(earlyPublishDate)) {
+                    earlyPublishDate = dtoPublishDate;
+                }
+            }
         }
-        ParamDto paramDto = new ParamDto(LocalDateTime.now().minusYears(1), LocalDateTime.now(), gettingUris, true);
+        ParamDto paramDto = new ParamDto(earlyPublishDate, LocalDateTime.now(), gettingUris, true);
         statClient.getStat(paramDto)
                 .stream()
                 .peek(viewStats -> eventDtoMap.get(viewStats.getUri()).setViews(viewStats.getHits()));
         return eventDtoMap.values().stream().toList();
     }
 
-    private EventFullDto addViews(EventFullDto eventShortDto) {
+    private EventFullDto addViews(EventFullDto dto) {
         List<String> gettingUris = new ArrayList<>();
-        gettingUris.add("/events/" + eventShortDto.getId());
-        ParamDto paramDto = new ParamDto(LocalDateTime.now().minusYears(1), LocalDateTime.now(), gettingUris, true);
+        gettingUris.add("/events/" + dto.getId());
+        LocalDateTime publishDate = LocalDateTime.now().minusHours(1);
+        if (dto.getPublishedOn() != null) {
+            publishDate = LocalDateTime.parse(dto.getPublishedOn().formatted(FORMAT_DATETIME));
+        }
+        ParamDto paramDto = new ParamDto(publishDate, LocalDateTime.now(), gettingUris, true);
         Long views = (long) statClient.getStat(paramDto).size();
-        eventShortDto.setViews(views);
-        return eventShortDto;
+        dto.setViews(views);
+        return dto;
     }
 
     private void checkEvent(Event event, UpdateEventBaseRequest updateRequest) {
