@@ -13,6 +13,12 @@
     <artifactId>main-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
+    <properties>
+        <project.mapstruct.version>1.6.3</project.mapstruct.version>
+        <project.mapstruct.processor.version>1.6.3</project.mapstruct.processor.version>
+        <project.lombok.mapstruct.binding.version>0.2.0</project.lombok.mapstruct.binding.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>ru.practicum</groupId>
@@ -78,12 +84,12 @@
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
-            <version>1.6.3</version>
+            <version>${project.mapstruct.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct-processor</artifactId>
-            <version>1.6.3</version>
+            <version>${project.mapstruct.processor.version}</version>
         </dependency>
 
     </dependencies>
@@ -102,17 +108,16 @@
                         <path>
                             <groupId>org.mapstruct</groupId>
                             <artifactId>mapstruct-processor</artifactId>
-                            <version>1.6.3</version>
+                            <version>${project.mapstruct.processor.version}</version>
                         </path>
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.34</version>
                         </path>
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok-mapstruct-binding</artifactId>
-                            <version>0.2.0</version>
+                            <version>${project.lombok.mapstruct.binding.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
