@@ -10,6 +10,8 @@ import ewm.event.model.EventState;
 import ewm.event.repository.EventRepository;
 import ewm.exception.ConditionNotMetException;
 import ewm.exception.EntityNotFoundException;
+import ewm.exception.InitiatorRequestException;
+import ewm.exception.ValidationException;
 import ewm.user.model.User;
 import ewm.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,22 +34,38 @@ public class CommentServiceImpl implements CommentService {
         if (!event.getState().equals(EventState.PUBLISHED)) {
             throw new ConditionNotMetException("Нельзя добавить комментарий к неопубликованному событию.");
         }
-        User user = userRepository.findById(userId)
+        if (event.getInitiator().getId().equals(userId)) {
+            throw new ValidationException(Comment.class, " Нельзя оставлять комментарии к своему событию.");
+        }
+        User author = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + userId + ", не найден."));
-        Comment comment = commentMapper.toComment(inputCommentDto);
-        comment.setEvent(event);
-        comment.setAuthor(user);
+        Comment comment = commentMapper.toComment(inputCommentDto, author, event);
         comment.setCreated(LocalDateTime.now());
         return commentMapper.toCommentDto(commentRepository.save(comment));
     }
 
     @Override
     public CommentDto updateComment(Long userId, Long commentId, InputCommentDto inputCommentDto) {
-        return null;
+        User author = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + userId + ", не найден."));
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new EntityNotFoundException(Comment.class, " Комментарии с ID - " + commentId + ", не найден."));
+        if (!comment.getAuthor().getId().equals(userId)) {
+            throw new InitiatorRequestException(" Нельзя редактировать комментарий другого пользователя.");
+        }
+        comment.setText(inputCommentDto.getText());
+        return commentMapper.toCommentDto(commentRepository.save(comment));
     }
 
     @Override
     public void deleteComment(Long userId, Long commentId) {
-
+        User author = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + userId + ", не найден."));
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new EntityNotFoundException(Comment.class, " Комментарии с ID - " + commentId + ", не найден."));
+        if (!comment.getAuthor().getId().equals(userId)) {
+            throw new InitiatorRequestException(" Нельзя удалить комментарий другого пользователя.");
+        }
+        commentRepository.deleteById(commentId);
     }
 }

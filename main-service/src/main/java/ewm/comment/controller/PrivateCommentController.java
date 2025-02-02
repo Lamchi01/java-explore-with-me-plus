@@ -23,4 +23,18 @@ public class PrivateCommentController {
                                  @Valid @RequestBody InputCommentDto inputCommentDto) {
         return commentService.addComment(userId, eventId, inputCommentDto);
     }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{commentId}/{userId}")
+    public void deleteComment(@PathVariable(name = "commentId") Long commentId,
+                              @PathVariable(name = "userId") Long userId) {
+        commentService.deleteComment(userId, commentId);
+    }
+
+    @PatchMapping("/{commentId}/{userId}")
+    public CommentDto updateComment(@PathVariable(name = "commentId") Long commentId,
+                                    @PathVariable(name = "userId") Long userId,
+                                    @Valid @RequestBody InputCommentDto inputCommentDto) {
+        return commentService.updateComment(userId, commentId, inputCommentDto);
+    }
 }
