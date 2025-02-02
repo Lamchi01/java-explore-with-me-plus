@@ -20,9 +20,9 @@ public interface CommentMapper {
     CommentDto toCommentDto(Comment comment);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "author", source = "author")
+    @Mapping(target = "author", source = "admin")
     @Mapping(target = "event", source = "event")
-    @Mapping(target = "created", dateFormat = "LocalDateTime.now()")
+    @Mapping(target = "created", expression = "java(java.time.LocalDateTime.now())")
     Comment toComment(CommentDto commentDto, User admin, Event event);
 
 }

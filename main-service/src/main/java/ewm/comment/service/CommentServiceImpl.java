@@ -32,7 +32,7 @@ public class CommentServiceImpl implements CommentService {
 
 
     @Override
-    public CommentDto addComment(Long userId, Long eventId, InputCommentDto inputCommentDto) {
+    public CommentDto add(Long userId, Long eventId, InputCommentDto inputCommentDto) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException(Event.class, " Событие с ID - " + eventId + ", не найдено."));
         if (!event.getState().equals(EventState.PUBLISHED)) {
@@ -65,7 +65,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public void deleteComment(Long userId, Long commentId) {
+    public void delete(Long userId, Long commentId) {
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + userId + ", не найден."));
         Comment comment = commentRepository.findById(commentId)
@@ -82,7 +82,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public CommentDto updateComment(Long userId, Long commentId, InputCommentDto inputCommentDto) {
+    public CommentDto update(Long userId, Long commentId, InputCommentDto inputCommentDto) {
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + userId + ", не найден."));
         Comment comment = commentRepository.findById(commentId)
