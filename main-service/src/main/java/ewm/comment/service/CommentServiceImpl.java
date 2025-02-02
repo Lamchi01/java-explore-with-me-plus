@@ -12,6 +12,7 @@ import ewm.exception.ConditionNotMetException;
 import ewm.exception.EntityNotFoundException;
 import ewm.exception.InitiatorRequestException;
 import ewm.exception.ValidationException;
+import ewm.requests.repository.RequestRepository;
 import ewm.user.model.User;
 import ewm.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
+    private final RequestRepository requestRepository;
     private final CommentMapper commentMapper;
 
     @Override
@@ -36,6 +38,9 @@ public class CommentServiceImpl implements CommentService {
         }
         if (event.getInitiator().getId().equals(userId)) {
             throw new ValidationException(Comment.class, " Нельзя оставлять комментарии к своему событию.");
+        }
+        if (requestRepository.findByRequesterIdAndEventId(userId, eventId).isEmpty()) {
+            throw new ValidationException(Comment.class, " Пользователь с ID - " + userId + ", не заявился на событие с ID - " + eventId + ".");
         }
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + userId + ", не найден."));
