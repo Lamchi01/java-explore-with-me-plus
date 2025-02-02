@@ -17,11 +17,13 @@ public class AdminCommentController {
 
     private final CommentService commentService;
 
-    @PostMapping("/{eventId}")
+    @PostMapping("/{eventId}/{userId}")
     @ResponseStatus(HttpStatus.CREATED)
-    public CommentDto add(@PathVariable("eventId") long eventId, @Valid @RequestBody CommentDto commentDto) {
+    public CommentDto add(@PathVariable("eventId") long eventId,
+                          @PathVariable("userId") long adminId,
+                          @Valid @RequestBody CommentDto commentDto) {
 
-        return commentService.add(eventId, commentDto);
+        return commentService.add(adminId, eventId, commentDto);
     }
 
     @DeleteMapping("/{commentId}")
@@ -32,7 +34,7 @@ public class AdminCommentController {
 
     @PatchMapping("/{commentId}")
     public CommentDto update(@PathVariable("commentId") long id,
-                                 @Valid @RequestBody CommentDto commentDto) {
+                             @Valid @RequestBody CommentDto commentDto) {
         return commentService.update(id, commentDto);
     }
 
