@@ -47,6 +47,13 @@ public class CommentServiceImpl implements CommentService {
         Comment comment = commentMapper.toComment(inputCommentDto, author, event);
         comment.setCreated(LocalDateTime.now());
         return commentMapper.toCommentDto(commentRepository.save(comment));
+
+        @Override
+        public CommentDto add(Long eventId, CommentDto commentDto) {
+        eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие c ID - " + eventId + ", не найдено."));
+
+        return commentMapper.toCommentDto(commentRepository.save(commentMapper.toComment(commentDto)));
     }
 
     @Override
@@ -62,6 +69,7 @@ public class CommentServiceImpl implements CommentService {
         return commentMapper.toCommentDto(commentRepository.save(comment));
     }
 
+
     @Override
     public void deleteComment(Long userId, Long commentId) {
         User author = userRepository.findById(userId)
@@ -73,4 +81,40 @@ public class CommentServiceImpl implements CommentService {
         }
         commentRepository.deleteById(commentId);
     }
-}
+
+        @Override
+        public void delete(Long id) {
+            commentRepository.deleteById(id);
+        }
+
+        @Override
+        public CommentDto update(Long id, CommentDto commentDto) {
+
+            Comment comment = commentRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException(Comment.class, "Комментарий c ID - " + id + ", не найден."));
+
+            if (commentDto.getAuthor() != null) {
+                User author = userRepository.findById(commentDto.getAuthor().getId())
+                        .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + commentDto.getAuthor().getId() + ", не найден."));
+                comment.setAuthor(author);
+            }
+
+            if (commentDto.getEventId() != null) {
+                Event event = eventRepository.findById(commentDto.getEventId())
+                        .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие c ID - " + id + ", не найдено."));
+                comment.setEvent(event);
+            }
+
+            if (commentDto.getText() != null) {
+                comment.setText(commentDto.getText());
+            }
+
+            if (commentDto.getCreated() != null) {
+                comment.setCreated(commentDto.getCreated());
+            }
+
+            return commentMapper.toCommentDto(commentRepository.save(comment));
+        }
+
+
+    }
