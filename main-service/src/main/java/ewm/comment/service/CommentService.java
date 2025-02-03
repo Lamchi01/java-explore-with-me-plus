@@ -2,6 +2,7 @@ package ewm.comment.service;
 
 import ewm.comment.dto.CommentDto;
 import ewm.comment.dto.InputCommentDto;
+import ewm.comment.dto.UpdateCommentDto;
 
 public interface CommentService {
 
@@ -11,7 +12,7 @@ public interface CommentService {
 
     CommentDto update(Long userId, Long commentId, InputCommentDto inputCommentDto);
 
-    CommentDto update(Long id, CommentDto commentDto);
+    CommentDto update(Long id, UpdateCommentDto updateCommentDto);
 
     void delete(Long id);
 

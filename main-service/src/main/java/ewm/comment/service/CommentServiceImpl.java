@@ -2,6 +2,7 @@ package ewm.comment.service;
 
 import ewm.comment.dto.CommentDto;
 import ewm.comment.dto.InputCommentDto;
+import ewm.comment.dto.UpdateCommentDto;
 import ewm.comment.mapper.CommentMapper;
 import ewm.comment.model.Comment;
 import ewm.comment.repository.CommentRepository;
@@ -95,29 +96,13 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public CommentDto update(Long id, CommentDto commentDto) {
+    public CommentDto update(Long id, UpdateCommentDto updateCommentDto) {
 
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(Comment.class, "Комментарий c ID - " + id + ", не найден."));
 
-        if (commentDto.getAuthor() != null) {
-            User author = userRepository.findById(commentDto.getAuthor().getId())
-                    .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + commentDto.getAuthor().getId() + ", не найден."));
-            comment.setAuthor(author);
-        }
-
-        if (commentDto.getEventId() != null) {
-            Event event = eventRepository.findById(commentDto.getEventId())
-                    .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие c ID - " + id + ", не найдено."));
-            comment.setEvent(event);
-        }
-
-        if (commentDto.getText() != null) {
-            comment.setText(commentDto.getText());
-        }
-
-        if (commentDto.getCreated() != null) {
-            comment.setCreated(commentDto.getCreated());
+        if (updateCommentDto.getText() != null) {
+            comment.setText(updateCommentDto.getText());
         }
         return commentMapper.toCommentDto(commentRepository.save(comment));
     }
