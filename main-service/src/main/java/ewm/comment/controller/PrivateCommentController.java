@@ -2,6 +2,7 @@ package ewm.comment.controller;
 
 import ewm.comment.dto.CommentDto;
 import ewm.comment.dto.InputCommentDto;
+import ewm.comment.dto.UpdateCommentDto;
 import ewm.comment.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,7 @@ public class PrivateCommentController {
     @PatchMapping("/{commentId}/{userId}")
     public CommentDto updateComment(@PathVariable(name = "commentId") Long commentId,
                                     @PathVariable(name = "userId") Long userId,
-                                    @Valid @RequestBody InputCommentDto inputCommentDto) {
-        return commentService.update(userId, commentId, inputCommentDto);
+                                    @Valid @RequestBody UpdateCommentDto updateCommentDto) {
+        return commentService.update(userId, commentId, updateCommentDto);
     }
 }
