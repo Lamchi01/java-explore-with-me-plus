@@ -2,6 +2,7 @@ package ewm.comment.service;
 
 import ewm.comment.dto.CommentDto;
 import ewm.comment.dto.InputCommentDto;
+import ewm.comment.dto.UpdateCommentDto;
 import ewm.comment.mapper.CommentMapper;
 import ewm.comment.model.Comment;
 import ewm.comment.repository.CommentRepository;
@@ -23,14 +24,16 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
+
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
     private final RequestRepository requestRepository;
     private final CommentMapper commentMapper;
 
+
     @Override
-    public CommentDto addComment(Long userId, Long eventId, InputCommentDto inputCommentDto) {
+    public CommentDto add(Long userId, Long eventId, InputCommentDto inputCommentDto) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException(Event.class, " Событие с ID - " + eventId + ", не найдено."));
         if (!event.getState().equals(EventState.PUBLISHED)) {
@@ -44,13 +47,43 @@ public class CommentServiceImpl implements CommentService {
         }
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + userId + ", не найден."));
+
         Comment comment = commentMapper.toComment(inputCommentDto, author, event);
         comment.setCreated(LocalDateTime.now());
         return commentMapper.toCommentDto(commentRepository.save(comment));
     }
 
     @Override
-    public CommentDto updateComment(Long userId, Long commentId, InputCommentDto inputCommentDto) {
+    public CommentDto add(Long adminId, Long eventId, CommentDto commentDto) {
+
+        User admin = userRepository.findById(adminId)
+                .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + adminId + ", не найден."));
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие c ID - " + eventId + ", не найдено."));
+
+        return commentMapper.toCommentDto(commentRepository.save(commentMapper.toComment(commentDto, admin, event)));
+    }
+
+    @Override
+    public void delete(Long userId, Long commentId) {
+        User author = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + userId + ", не найден."));
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new EntityNotFoundException(Comment.class, " Комментарии с ID - " + commentId + ", не найден."));
+        if (!comment.getAuthor().getId().equals(userId)) {
+            throw new InitiatorRequestException(" Нельзя удалить комментарий другого пользователя.");
+        }
+        commentRepository.deleteById(commentId);
+    }
+
+    @Override
+    public void delete(Long id) {
+        commentRepository.deleteById(id);
+    }
+
+    @Override
+    public CommentDto update(Long userId, Long commentId, InputCommentDto inputCommentDto) {
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + userId + ", не найден."));
         Comment comment = commentRepository.findById(commentId)
@@ -63,14 +96,15 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public void deleteComment(Long userId, Long commentId) {
-        User author = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + userId + ", не найден."));
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new EntityNotFoundException(Comment.class, " Комментарии с ID - " + commentId + ", не найден."));
-        if (!comment.getAuthor().getId().equals(userId)) {
-            throw new InitiatorRequestException(" Нельзя удалить комментарий другого пользователя.");
+    public CommentDto update(Long id, UpdateCommentDto updateCommentDto) {
+
+        Comment comment = commentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(Comment.class, "Комментарий c ID - " + id + ", не найден."));
+
+        if (updateCommentDto.getText() != null) {
+            comment.setText(updateCommentDto.getText());
         }
-        commentRepository.deleteById(commentId);
+        return commentMapper.toCommentDto(commentRepository.save(comment));
     }
+
 }
