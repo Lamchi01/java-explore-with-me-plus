@@ -27,5 +27,11 @@ main-service
 
 **Admin Endpoints**:
 
-    1. Удаление комментария
+    1. Добавление комментария администратором:
+    POST /admin/comments/{eventId}/{userId}
+
+    2. Удаление комментария
     DELETE /admin/comments/{commentId}
+
+    3. Обновление любого комментария администратором:
+    PATCH /admin/comments/{commentId}
