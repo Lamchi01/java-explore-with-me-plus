@@ -166,7 +166,7 @@
 							"        const findedComments = await api.findComments(eventId);\r",
 							"\r",
 							"        pm.collectionVariables.set(\"commentId\", comment.id)\r",
-							"        pm.collectionVariables.set(\"response\", findedComments)\r",
+							"        pm.collectionVariables.set(\"response_t\", findedComments)\r",
 							"\r",
 							"    } catch(err) {\r",
 							"        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
@@ -200,10 +200,13 @@
 							"    pm.response.to.have.status(204);\r",
 							"});\r",
 							"\r",
-							"const source = pm.collectionVariables.get('response');\r",
+							"const source = pm.collectionVariables.get('response_t');\r",
+							"console.log(source, \"source\");\r",
+							"\r",
 							"const commentId = pm.collectionVariables.get('commentId');\r",
 							"const eventId = pm.collectionVariables.get('eventId');\r",
 							"const initialCount = source.length;\r",
+							"console.log(initialCount, \"initialCount\");\r",
 							"\r",
 							"pm.sendRequest({\r",
 							"        url: pm.collectionVariables.get(\"baseUrl\") + \"/comments/\" + eventId,\r",
@@ -213,8 +216,14 @@
 							"            pm.expect(response.code).to.eql(200);\r",
 							"        });\r",
 							"\r",
+							"console.log(response, \"response\");\r",
+							"\r",
+							"\r",
 							"const updatedComments = response.json();\r",
+							"console.log(updatedComments, \"updatedComments\")\r",
+							"\r",
 							"const updatedCount = updatedComments.length;\r",
+							"console.log(updatedCount, \"updatedCount\");\r",
 							"\r",
 							"pm.test(\"Количество комментариев должен быть меньше на 1\", function () {\r",
 							"    pm.expect(updatedCount).to.equal(initialCount - 1);\r",
@@ -812,6 +821,10 @@
 			"key": "eventId",
 			"value": "",
 			"type": "default"
+		},
+		{
+			"key": "response_t",
+			"value": ""
 		}
 	]
 }
