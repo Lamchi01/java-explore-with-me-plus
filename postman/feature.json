@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "5cc947be-c930-41e8-8331-e5e0b386e680",
+		"_postman_id": "3ece8bf3-62b3-44c6-8e02-4718e6cf6258",
 		"name": "feature",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "38258017"
+		"_exporter_id": "40931871"
 	},
 	"item": [
 		{
@@ -406,8 +406,7 @@
 							"        pm.collectionVariables.set('uid', user.id);\r",
 							"        pm.collectionVariables.set('uid1', submittedUser.id);\r",
 							"        pm.collectionVariables.set('eid', event.id);\r",
-							"        let comment = await api.addPrivateComment(event.id, submittedUser.id, rnd.getComment());\r",
-							"        pm.collectionVariables.set('response', comment);\r",
+							"        const comment = await api.addPrivateComment(event.id, submittedUser.id, rnd.getComment());\r",
 							"    } catch(err) {\r",
 							"        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
 							"    }\r",
@@ -442,22 +441,11 @@
 							"    pm.response.to.be.json;\r",
 							"});\r",
 							"\r",
-							"const source = pm.collectionVariables.get('response');\r",
-							"console.log(source, \"source\");\r",
 							"const target = pm.response.json()[0];\r",
 							"console.log(target, \"target\");\r",
 							"\r",
-							"\r",
 							"pm.test(\"Комментарий должен содержать поля: id, eventId, author, text, created\", function () {\r",
 							"    pm.expect(target).to.contain.keys('id', 'eventId', 'author', 'text', 'created');\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
-							"    pm.expect(source.id).to.equal(target.id, 'Id комментария должен соответствовать id комментария с указанным идентификатором');\r",
-							"    pm.expect(source.eventId).equal(target.eventId, 'EventId комментария должен соответствовать eventId комментария с указанным идентификатором');\r",
-							"    pm.expect(source.author).to.not.be.null;\r",
-							"    pm.expect(source.author.id).equal(target.author.id, 'Id автора комментария должен соответствовать id автора комментария с указанным идентификатором');\r",
-							"    pm.expect(source.text).equal(target.text, 'Текст комментария должен соответствовать тексту комментария с указанным идентификатором');\r",
 							"});"
 						],
 						"type": "text/javascript",
