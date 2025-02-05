@@ -86,7 +86,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public CommentDto update(Long userId, Long commentId, InputCommentDto inputCommentDto) {
+    public CommentDto update(Long userId, Long commentId, UpdateCommentDto updateCommentDto) {
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + userId + ", не найден."));
         Comment comment = commentRepository.findById(commentId)
@@ -94,7 +94,7 @@ public class CommentServiceImpl implements CommentService {
         if (!comment.getAuthor().getId().equals(userId)) {
             throw new InitiatorRequestException(" Нельзя редактировать комментарий другого пользователя.");
         }
-        comment.setText(inputCommentDto.getText());
+        comment.setText(updateCommentDto.getText());
         return commentMapper.toCommentDto(commentRepository.save(comment));
     }
 
