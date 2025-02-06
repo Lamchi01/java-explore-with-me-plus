@@ -36,9 +36,8 @@ public class CommentServiceImpl implements CommentService {
 
 
     @Override
-    public CommentDto add(Long userId, Long eventId, InputCommentDto inputCommentDto) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new EntityNotFoundException(Event.class, " Событие с ID - " + eventId + ", не найдено."));
+    public CommentDto privateAdd(Long userId, Long eventId, InputCommentDto inputCommentDto) {
+        Event event = findEvent(eventId);
         if (!event.getState().equals(EventState.PUBLISHED)) {
             throw new ConditionNotMetException("Нельзя добавить комментарий к неопубликованному событию.");
         }
@@ -48,8 +47,7 @@ public class CommentServiceImpl implements CommentService {
         if (requestRepository.findByRequesterIdAndEventId(userId, eventId).isEmpty()) {
             throw new ValidationException(Comment.class, " Пользователь с ID - " + userId + ", не заявился на событие с ID - " + eventId + ".");
         }
-        User author = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + userId + ", не найден."));
+        User author = findUser(userId);
 
         Comment comment = commentMapper.toComment(inputCommentDto, author, event);
         comment.setCreated(LocalDateTime.now());
@@ -69,11 +67,9 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public void delete(Long userId, Long commentId) {
-        User author = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + userId + ", не найден."));
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new EntityNotFoundException(Comment.class, " Комментарии с ID - " + commentId + ", не найден."));
+    public void privateDelete(Long userId, Long commentId) {
+        User author = findUser(userId);
+        Comment comment = findComment(commentId);
         if (!comment.getAuthor().getId().equals(userId)) {
             throw new InitiatorRequestException(" Нельзя удалить комментарий другого пользователя.");
         }
@@ -86,11 +82,9 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public CommentDto update(Long userId, Long commentId, UpdateCommentDto updateCommentDto) {
-        User author = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + userId + ", не найден."));
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new EntityNotFoundException(Comment.class, " Комментарии с ID - " + commentId + ", не найден."));
+    public CommentDto privateUpdate(Long userId, Long commentId, UpdateCommentDto updateCommentDto) {
+        User author = findUser(userId);
+        Comment comment = findComment(commentId);
         if (!comment.getAuthor().getId().equals(userId)) {
             throw new InitiatorRequestException(" Нельзя редактировать комментарий другого пользователя.");
         }
@@ -112,12 +106,43 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentDto> findCommentsByEventId(Long eventId, Integer from, Integer size) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие c ID - " + eventId + ", не найдено."));
+        Event event = findEvent(eventId);
         if (!event.getState().equals(EventState.PUBLISHED)) {
             throw new ConditionNotMetException("Событие c ID - " + eventId + ", не опубликовано.");
         }
         Pageable pageable = PageRequest.of(from, size);
         return commentMapper.toCommentDtos(commentRepository.findAllByEventId(eventId, pageable));
+    }
+
+    @Override
+    public List<CommentDto> findCommentsByEventIdAndUserId(Long eventId, Long userId, Integer from, Integer size) {
+        User user = findUser(userId);
+        Event event = findEvent(eventId);
+        Pageable pageable = PageRequest.of(from, size);
+        return commentMapper.toCommentDtos(commentRepository.findAllByEventIdAndAuthorId(eventId, userId, pageable));
+    }
+
+    @Override
+    public List<CommentDto> findCommentsByUserId(Long eventId, Integer from, Integer size) {
+        User user = findUser(eventId);
+        Pageable pageable = PageRequest.of(from, size);
+        return commentMapper.toCommentDtos(commentRepository.findAllByAuthorId(user.getId(), pageable));
+    }
+
+    private Event findEvent(Long eventId) {
+        return eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        Event.class, "Событие c ID - " + eventId + ", не найдено или ещё не опубликовано")
+                );
+    }
+
+    private User findUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(User.class, "Пользователь c ID - " + userId + ", не найден."));
+    }
+
+    private Comment findComment(Long commentId) {
+        return commentRepository.findById(commentId)
+                .orElseThrow(() -> new EntityNotFoundException(Comment.class, "Комментарий c ID - " + commentId + ", не найден."));
     }
 }
