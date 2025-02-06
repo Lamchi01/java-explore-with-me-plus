@@ -19,4 +19,9 @@ public class PublicCommentController {
                                                         @RequestParam(name = "size", defaultValue = "10") Integer size) {
         return commentService.findCommentsByEventId(eventId, from, size);
     }
+
+    @GetMapping("/{commentId}")
+    public CommentDto findCommentById(@PathVariable(name = "commentId") Long commentId) {
+        return commentService.findCommentById(commentId);
+    }
 }

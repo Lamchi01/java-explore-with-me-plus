@@ -103,12 +103,15 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentDto> findCommentsByEventId(Long eventId, Integer from, Integer size) {
-        Event event = findEvent(eventId);
-        if (!event.getState().equals(EventState.PUBLISHED)) {
-            throw new ConditionNotMetException("Событие c ID - " + eventId + ", не опубликовано.");
-        }
+        findEvent(eventId);
         Pageable pageable = PageRequest.of(from, size);
         return commentMapper.toCommentDtos(commentRepository.findAllByEventId(eventId, pageable));
+    }
+
+    @Override
+    public CommentDto findCommentById(Long commentId) {
+        Comment comment = findComment(commentId);
+        return commentMapper.toCommentDto(comment);
     }
 
     @Override

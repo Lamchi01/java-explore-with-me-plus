@@ -25,4 +25,6 @@ public interface CommentService {
     List<CommentDto> findCommentsByEventIdAndUserId(Long eventId, Long userId, Integer from, Integer size);
 
     List<CommentDto> findCommentsByUserId(Long userId, Integer from, Integer size);
+
+    CommentDto findCommentById(Long commentId);
 }
