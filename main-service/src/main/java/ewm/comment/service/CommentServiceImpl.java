@@ -51,18 +51,6 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public CommentDto add(Long adminId, Long eventId, CommentDto commentDto) {
-
-        User admin = userRepository.findById(adminId)
-                .orElseThrow(() -> new EntityNotFoundException(User.class, " Пользователь с ID - " + adminId + ", не найден."));
-
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new EntityNotFoundException(Event.class, "Событие c ID - " + eventId + ", не найдено."));
-
-        return commentMapper.toCommentDto(commentRepository.save(commentMapper.toComment(commentDto, admin, event)));
-    }
-
-    @Override
     public void privateDelete(Long userId, Long commentId) {
         User author = findUser(userId);
         Comment comment = findComment(commentId);
@@ -73,7 +61,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public void delete(Long id) {
+    public void adminDelete(Long id) {
         commentRepository.deleteById(id);
     }
 
@@ -89,7 +77,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public CommentDto update(Long id, UpdateCommentDto updateCommentDto) {
+    public CommentDto adminUpdate(Long id, UpdateCommentDto updateCommentDto) {
 
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(Comment.class, "Комментарий c ID - " + id + ", не найден."));
