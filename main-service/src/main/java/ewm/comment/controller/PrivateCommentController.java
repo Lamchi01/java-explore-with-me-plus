@@ -7,13 +7,13 @@ import ewm.comment.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/comments")
 @RequiredArgsConstructor
-@Validated
 public class PrivateCommentController {
     private final CommentService commentService;
 
@@ -22,20 +22,35 @@ public class PrivateCommentController {
     public CommentDto addComment(@PathVariable(name = "eventId") Long eventId,
                                  @PathVariable(name = "userId") Long userId,
                                  @Valid @RequestBody InputCommentDto inputCommentDto) {
-        return commentService.add(userId, eventId, inputCommentDto);
+        return commentService.privateAdd(userId, eventId, inputCommentDto);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{commentId}/{userId}")
     public void deleteComment(@PathVariable(name = "commentId") Long commentId,
                               @PathVariable(name = "userId") Long userId) {
-        commentService.delete(userId, commentId);
+        commentService.privateDelete(userId, commentId);
     }
 
     @PatchMapping("/{commentId}/{userId}")
     public CommentDto updateComment(@PathVariable(name = "commentId") Long commentId,
                                     @PathVariable(name = "userId") Long userId,
                                     @Valid @RequestBody UpdateCommentDto updateCommentDto) {
-        return commentService.update(userId, commentId, updateCommentDto);
+        return commentService.privateUpdate(userId, commentId, updateCommentDto);
+    }
+
+    @GetMapping("/{eventId}/{userId}")
+    public List<CommentDto> findCommentsByEventIdAndUserId(@PathVariable(name = "eventId") Long eventId,
+                                                           @PathVariable(name = "userId") Long userId,
+                                                           @RequestParam(name = "from", defaultValue = "0") Integer from,
+                                                           @RequestParam(name = "size", defaultValue = "10") Integer size) {
+        return commentService.findCommentsByEventIdAndUserId(eventId, userId, from, size);
+    }
+
+    @GetMapping("/users/{userId}")
+    public List<CommentDto> findCommentsByUserId(@PathVariable(name = "userId") Long userId,
+                                                 @RequestParam(name = "from", defaultValue = "0") Integer from,
+                                                 @RequestParam(name = "size", defaultValue = "10") Integer size) {
+        return commentService.findCommentsByUserId(userId, from, size);
     }
 }
