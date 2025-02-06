@@ -38,9 +38,6 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentDto privateAdd(Long userId, Long eventId, InputCommentDto inputCommentDto) {
         Event event = findEvent(eventId);
-        if (!event.getState().equals(EventState.PUBLISHED)) {
-            throw new ConditionNotMetException("Нельзя добавить комментарий к неопубликованному событию.");
-        }
         if (event.getInitiator().getId().equals(userId)) {
             throw new ValidationException(Comment.class, " Нельзя оставлять комментарии к своему событию.");
         }

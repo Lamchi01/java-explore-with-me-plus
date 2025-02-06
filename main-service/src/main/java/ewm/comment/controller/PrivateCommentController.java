@@ -47,7 +47,7 @@ public class PrivateCommentController {
         return commentService.findCommentsByEventIdAndUserId(eventId, userId, from, size);
     }
 
-    @GetMapping("/{userId}")
+    @GetMapping("/users/{userId}")
     public List<CommentDto> findCommentsByUserId(@PathVariable(name = "userId") Long userId,
                                                  @RequestParam(name = "from", defaultValue = "0") Integer from,
                                                  @RequestParam(name = "size", defaultValue = "10") Integer size) {
