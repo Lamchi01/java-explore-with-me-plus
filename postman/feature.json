@@ -1,139 +1,11 @@
 {
 	"info": {
-		"_postman_id": "582cd809-89f7-482d-aa8c-ae92bf0af6c1",
-		"name": "feature",
+		"_postman_id": "dc7336fa-9690-493d-99d7-832c7ae553e7",
+		"name": "feature Copy",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "38258017"
+		"_exporter_id": "31238337"
 	},
 	"item": [
-		{
-			"name": "Добавление нового комментария Администратором",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"const main = async () => {\r",
-							"    const api = new API(pm);\r",
-							"    const rnd = new RandomUtils();\r",
-							"\r",
-							"    let comment;\r",
-							"    let user;\r",
-							"    let event;\r",
-							"    \r",
-							"    try {\r",
-							"        comment = rnd.getComment();\r",
-							"        pm.collectionVariables.set(\"commentId\", comment.id)\r",
-							"        user = await api.addUser(rnd.getUser());\r",
-							"        pm.collectionVariables.set(\"uid\", user.id)\r",
-							"        const category = await api.addCategory(rnd.getCategory());\r",
-							"        event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
-							"        pm.collectionVariables.set(\"eventId\", event.id)\r",
-							"\r",
-							"    } catch(err) {\r",
-							"        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
-							"    }\r",
-							"\r",
-							"    pm.request.body.update({\r",
-							"        mode: 'raw',\r",
-							"        raw: JSON.stringify(comment),\r",
-							"        options: { raw: { language: 'json' } }\r",
-							"    });\r",
-							"\r",
-							"};\r",
-							"\r",
-							"const interval = setInterval(() => {}, 1000);\r",
-							"\r",
-							"setTimeout(async () => \r",
-							"    {\r",
-							"        try {\r",
-							"            await main();\r",
-							"        } catch (e) {\r",
-							"            console.error(e);\r",
-							"        } finally {\r",
-							"            clearInterval(interval);\r",
-							"        }\r",
-							"    },  \r",
-							"    100 \r",
-							");"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Ответ должен содержать код статуса 201 и данные в формате json\", function () {\r",
-							"    pm.response.to.have.status(201);\r",
-							"    pm.response.to.be.withBody;\r",
-							"    pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"const source = JSON.parse(pm.request.body.raw);\r",
-							"const target = pm.response.json();\r",
-							"\r",
-							"pm.test(\"Комментарий должен содержать поле: text\", function () {\r",
-							"pm.expect(target).to.have.property('text');\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
-							"    pm.expect(target.id).to.not.be.null;\r",
-							"    pm.expect(source.text).equal(target.text, 'Имя пользователя должно соответствовать отправленному в запросе');\r",
-							"});"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					},
-					{
-						"key": "Accept",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{{request_body}}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{baseUrl}}/admin/comments/:eventId/:userId",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"admin",
-						"comments",
-						":eventId",
-						":userId"
-					],
-					"variable": [
-						{
-							"key": "eventId",
-							"value": "{{eventId}}"
-						},
-						{
-							"key": "userId",
-							"value": "{{uid}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
 		{
 			"name": "Удаление комментария Администратором",
 			"event": [
@@ -153,15 +25,18 @@
 							"        user = await api.addUser(rnd.getUser());\r",
 							"        pm.collectionVariables.set(\"uid\", user.id)\r",
 							"        userId = pm.collectionVariables.get('uid');\r",
+							"        const user2 = await api.addUser(rnd.getUser());\r",
+							"\r",
 							"\r",
 							"        const category = await api.addCategory(rnd.getCategory());\r",
 							"        const event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
 							"        pm.collectionVariables.set(\"eventId\", event.id)\r",
 							"        eventId = pm.collectionVariables.get('eventId');\r",
 							"        await api.publishEvent(eventId);\r",
+							"        await api.publishParticipationRequest(eventId, user2.id);\r",
 							"        \r",
-							"        const comment = await api.addComment(rnd.getComment(),eventId, userId);\r",
-							"        await api.addComment(rnd.getComment(),eventId, userId);\r",
+							"        const comment = await api.addPrivateComment(eventId, user2.id, rnd.getComment());\r",
+							"        await api.addPrivateComment(eventId, user2.id, rnd.getComment());\r",
 							"\r",
 							"        const findedComments = await api.findComments(eventId);\r",
 							"\r",
@@ -283,18 +158,24 @@
 							"    \r",
 							"    let comment\r",
 							"    let userId\r",
+							"    let userId2\r",
 							"    let eventId\r",
 							"\r",
 							"    try {\r",
-							"        user = await api.addUser(rnd.getUser());\r",
+							"        const user = await api.addUser(rnd.getUser());\r",
+							"        const user2 = await api.addUser(rnd.getUser());\r",
+							"\r",
 							"        pm.collectionVariables.set(\"uid\", user.id)\r",
 							"        userId = pm.collectionVariables.get('uid');\r",
+							"        \r",
 							"\r",
 							"        const category = await api.addCategory(rnd.getCategory());\r",
 							"        const event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
 							"        pm.collectionVariables.set(\"eventId\", event.id)\r",
 							"        eventId = pm.collectionVariables.get('eventId');\r",
-							"        comment = await api.addComment(rnd.getComment(),eventId, userId);\r",
+							"        await api.publishEvent(eventId);\r",
+							"        await api.publishParticipationRequest(eventId, user2.id);\r",
+							"        comment = await api.addPrivateComment(eventId, user2.id, rnd.getComment());\r",
 							"        pm.collectionVariables.set(\"commentId\", Number(comment.id))\r",
 							"        \r",
 							"    } catch(err) {\r",

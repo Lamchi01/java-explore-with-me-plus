@@ -10,13 +10,11 @@ public interface CommentService {
 
     CommentDto privateAdd(Long userId, Long eventId, InputCommentDto inputCommentDto);
 
-    CommentDto add(Long adminId, Long eventId, CommentDto commentDto);
-
     CommentDto privateUpdate(Long userId, Long commentId, UpdateCommentDto updateCommentDto);
 
-    CommentDto update(Long id, UpdateCommentDto updateCommentDto);
+    CommentDto adminUpdate(Long id, UpdateCommentDto updateCommentDto);
 
-    void delete(Long id);
+    void adminDelete(Long id);
 
     void privateDelete(Long userId, Long commentId);
 
