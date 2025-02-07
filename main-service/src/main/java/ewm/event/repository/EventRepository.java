@@ -1,6 +1,7 @@
 package ewm.event.repository;
 
 import ewm.event.model.Event;
+import ewm.event.model.EventState;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -53,4 +54,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findAllByInitiatorId(Long initiatorId);
 
     List<Event> findAllByInitiatorId(Long initiatorId, Pageable pageable);
+
+    Optional<Event> findByIdAndState(Long eventId, EventState state);
 }

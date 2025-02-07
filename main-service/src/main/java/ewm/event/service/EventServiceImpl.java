@@ -4,9 +4,9 @@ import ewm.ParamDto;
 import ewm.category.model.Category;
 import ewm.category.repository.CategoryRepository;
 import ewm.client.RestStatClient;
+import ewm.comment.repository.CommentRepository;
 import ewm.event.dto.*;
 import ewm.event.mapper.EventMapper;
-import ewm.event.mapper.LocationMapper;
 import ewm.event.model.*;
 import ewm.event.repository.EventRepository;
 import ewm.event.repository.LocationRepository;
@@ -41,7 +41,7 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final LocationRepository locationRepository;
     private final RequestRepository requestRepository;
-    private final LocationMapper locationMapper;
+    private final CommentRepository commentRepository;
 
     @Override
     public List<EventShortDto> getAllEvents(ReqParam reqParam) {
@@ -63,13 +63,26 @@ public class EventServiceImpl implements EventService {
         if (eventFullDtos.isEmpty()) {
             throw new ValidationException(ReqParam.class, " События не найдены");
         }
+        List<Long> eventsIds = eventFullDtos.stream().map(EventFullDto::getId).toList();
+        List<EventCommentCount> eventCommentCountList = commentRepository.findAllByEventIds(eventsIds);
+
+        eventFullDtos.forEach(eventFullDto ->
+                eventFullDto.setCommentsCount(eventCommentCountList.stream()
+                        .filter(eventComment -> eventComment.getEventId().equals(eventFullDto.getId()))
+                        .map(EventCommentCount::getCommentCount)
+                        .findFirst()
+                        .orElse(0L)
+                )
+        );
+
         List<EventShortDto> addedViewsAndRequests = eventMapper.toEventShortDtos(addRequests(addViews(eventFullDtos)));
 
         if (reqParam.getSort() != null) {
             return switch (reqParam.getSort()) {
                 case EVENT_DATE ->
                         addedViewsAndRequests.stream().sorted(Comparator.comparing(EventShortDto::getEventDate)).toList();
-                case VIEWS -> addedViewsAndRequests.stream().sorted(Comparator.comparing(EventShortDto::getViews)).toList();
+                case VIEWS ->
+                        addedViewsAndRequests.stream().sorted(Comparator.comparing(EventShortDto::getViews)).toList();
             };
         }
         return addedViewsAndRequests;
@@ -103,6 +116,7 @@ public class EventServiceImpl implements EventService {
             throw new EntityNotFoundException(Event.class, " Событие c ID - " + id + ", ещё не опубликовано.");
         }
         EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
+        eventFullDto.setCommentsCount(commentRepository.countCommentByEvent_Id(event.getId()));
         return addRequests(addViews(eventFullDto));
     }
 
