@@ -20,18 +20,24 @@ main-service
     3. Обновление комментария текущим пользователем:
     PATCH /comments/{commentId}/{userId}
 
+    4. Получение комментариев к событию текущим пользователем:
+    GET /comments/{eventId}/{userId}
+
+    5. Получение всех комментариев текущим пользователем:
+    GET /comments/users/{userId}
+
 **Public Endpoints**:
 
     1. Получение комментариев к событию:
-    GET /comments/{eventId}
+    GET /comments/events/{eventId}
+    
+    2. Получение комментария по его айди:
+    GET /comments/{commentId}
 
 **Admin Endpoints**:
 
-    1. Добавление комментария администратором:
-    POST /admin/comments/{eventId}/{userId}
-
-    2. Удаление комментария
+    1. Удаление комментария
     DELETE /admin/comments/{commentId}
 
-    3. Обновление любого комментария администратором:
+    2. Обновление любого комментария администратором:
     PATCH /admin/comments/{commentId}
